@@ -1,0 +1,3889 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>饭永远不到 — 暖食欲点餐结算</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+
+    body {
+      font-family:
+        Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "SF Pro Display", "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(circle at 15% 8%, rgba(255, 92, 42, 0.18), transparent 30%),
+        radial-gradient(circle at 88% 12%, rgba(255, 176, 32, 0.13), transparent 28%),
+        radial-gradient(circle at 50% 92%, rgba(132, 204, 22, 0.08), transparent 36%),
+        #120B08;
+    }
+
+    .glass {
+      background: rgba(38, 20, 11, 0.62);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+    }
+
+    .glass-soft {
+      background: rgba(255, 244, 220, 0.07);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .ambient-pink {
+      box-shadow:
+        0 0 70px rgba(255, 92, 42, 0.26),
+        0 0 150px rgba(255, 176, 32, 0.10);
+    }
+
+    .ambient-cyan {
+      box-shadow:
+        0 0 80px rgba(255, 176, 32, 0.18),
+        0 0 170px rgba(255, 122, 24, 0.08);
+    }
+
+    .ambient-dark {
+      box-shadow:
+        0 34px 130px rgba(18, 11, 8, 0.58),
+        inset 0 1px 0 rgba(255, 244, 220, 0.07);
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      scrollbar-width: none;
+    }
+
+    .page {
+      display: block;
+    }
+
+    .page[hidden] {
+      display: none;
+    }
+
+    .toast {
+      transform: translateY(18px);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    @keyframes fakeRouteProgress {
+      0% { width: 12%; }
+      45% { width: 57%; }
+      72% { width: 76%; }
+      100% { width: 88%; }
+    }
+
+    @keyframes riderFloat {
+      0%, 100% { transform: translate(0, 0) rotate(-8deg); }
+      50% { transform: translate(8px, -7px) rotate(4deg); }
+    }
+
+    .route-progress {
+      animation: fakeRouteProgress 5.8s ease-in-out infinite alternate;
+    }
+
+    .rider-float {
+      animation: riderFloat 2.6s ease-in-out infinite;
+    }
+
+
+    @keyframes routeDash {
+      to { stroke-dashoffset: -520; }
+    }
+
+    @keyframes arrivalPulse {
+      0%, 100% {
+        transform: scale(1);
+        opacity: 0.55;
+      }
+      50% {
+        transform: scale(1.18);
+        opacity: 0.95;
+      }
+    }
+
+    .route-main {
+      stroke-dasharray: 18 16;
+      animation: routeDash 9s linear infinite;
+    }
+
+    .arrival-pulse {
+      transform-origin: center;
+      animation: arrivalPulse 1.8s ease-in-out infinite;
+    }
+
+
+    @keyframes oneMinuteGuideFill {
+      from { width: 0%; }
+      to { width: 100%; }
+    }
+
+    @keyframes oneMinuteRiderMove {
+      from { left: 0%; }
+      to { left: calc(100% - 3.25rem); }
+    }
+
+    .delivery-fill.play {
+      animation: oneMinuteGuideFill 60s linear forwards;
+    }
+
+    .delivery-rider.play {
+      animation: oneMinuteRiderMove 60s linear forwards;
+    }
+
+    .delivery-arrived .delivery-fill {
+      width: 100%;
+    }
+
+    .delivery-arrived .delivery-rider {
+      left: calc(100% - 3.25rem);
+    }
+
+
+    @keyframes trayBreathe {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-4px) scale(1.015); }
+    }
+
+    @keyframes trayPop {
+      0% { transform: translateY(0) scale(1); }
+      40% { transform: translateY(-10px) scale(1.08); }
+      100% { transform: translateY(0) scale(1); }
+    }
+
+    @keyframes foodFloatOne {
+      0% { transform: translate(0, 8px) rotate(0deg); opacity: 0; }
+      25% { opacity: 1; }
+      100% { transform: translate(-18px, -34px) rotate(-12deg); opacity: 0; }
+    }
+
+    @keyframes foodFloatTwo {
+      0% { transform: translate(0, 8px) rotate(0deg); opacity: 0; }
+      25% { opacity: 1; }
+      100% { transform: translate(16px, -38px) rotate(10deg); opacity: 0; }
+    }
+
+    .floating-tray-shell {
+      pointer-events: none;
+    }
+
+    .floating-tray-button {
+      pointer-events: auto;
+      animation: trayBreathe 3.6s ease-in-out infinite;
+    }
+
+    .floating-tray-button.pop {
+      animation: trayPop 0.48s ease-out, trayBreathe 3.6s ease-in-out 0.5s infinite;
+    }
+
+    .floating-food {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .floating-tray-button.pop .floating-food.one {
+      animation: foodFloatOne 0.82s ease-out;
+    }
+
+    .floating-tray-button.pop .floating-food.two {
+      animation: foodFloatTwo 0.82s ease-out 0.06s;
+    }
+
+    .floating-tray-empty {
+      opacity: 0.64;
+      filter: saturate(0.82);
+    }
+
+    @media (max-width: 480px) {
+      .floating-tray-button {
+        width: calc(100vw - 2rem);
+      }
+    }
+
+
+
+    .dish-photo-shell {
+      position: relative;
+      overflow: hidden;
+      border-radius: 1.8rem;
+      background: rgba(18, 11, 8, 0.45);
+      min-height: 11rem;
+      isolation: isolate;
+    }
+
+    .dish-photo-image {
+      width: 100%;
+      height: 11rem;
+      object-fit: cover;
+      display: block;
+      opacity: 0;
+      transform: scale(1.03);
+      transition: opacity 0.45s ease, transform 0.6s ease;
+    }
+
+    .dish-photo-image.is-visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .dish-photo-fallback {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(255, 176, 32, 0.14), transparent 30%),
+        linear-gradient(180deg, rgba(255,255,255,0.04), rgba(0,0,0,0.12));
+      transition: opacity 0.35s ease;
+    }
+
+    .dish-photo-fallback.is-hidden {
+      opacity: 0;
+    }
+
+    .dish-photo-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(18, 11, 8, 0.00) 30%, rgba(18, 11, 8, 0.18) 72%, rgba(18, 11, 8, 0.44) 100%);
+      pointer-events: none;
+    }
+
+    .dish-photo-badge {
+      position: absolute;
+      left: 1rem;
+      bottom: 1rem;
+      z-index: 2;
+      border-radius: 999px;
+      background: rgba(18, 11, 8, 0.56);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 0.45rem 0.8rem;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: rgba(255, 237, 213, 0.92);
+    }
+
+    #recipeGrid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    #recipeGrid > article {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1;
+      gap: 0.25rem;
+    }
+
+    #recipeGrid > article > .grid {
+      width: min(100%, 4.5rem);
+      height: min(100%, 4.5rem);
+    }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    img,
+    svg,
+    video,
+    canvas {
+      max-width: 100%;
+    }
+
+    input,
+    textarea,
+    select,
+    button {
+      max-width: 100%;
+    }
+
+    @media (max-width: 767px) {
+      body {
+        padding-bottom: 6.75rem;
+      }
+
+      main {
+        padding: 0.875rem !important;
+      }
+
+      header {
+        top: 0.75rem !important;
+        margin-bottom: 2.5rem !important;
+      }
+
+      nav {
+        gap: 0.75rem;
+        border-radius: 1.35rem !important;
+        padding: 0.75rem !important;
+      }
+
+      nav > button:first-child {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      nav > button:first-child > span:last-child {
+        min-width: 0;
+      }
+
+      nav > button:first-child .block:first-child {
+        max-width: 9.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      nav > button:first-child .block:last-child {
+        display: none;
+      }
+
+      nav > button:last-child {
+        flex: 0 0 auto;
+        border-radius: 1rem !important;
+        padding: 0.7rem 0.9rem !important;
+      }
+
+      .toast {
+        bottom: 5.8rem !important;
+        width: calc(100vw - 2rem);
+        text-align: center;
+      }
+
+      .floating-tray-shell {
+        bottom: 0.75rem !important;
+        padding-inline: 0.75rem !important;
+      }
+
+      .floating-tray-button {
+        min-height: 4rem !important;
+        width: calc(100vw - 1.5rem) !important;
+        border-radius: 1.35rem !important;
+        padding: 0.75rem 0.9rem !important;
+      }
+
+      .floating-tray-button .size-12 {
+        width: 2.5rem !important;
+        height: 2.5rem !important;
+      }
+
+      #floatingTrayMeta {
+        max-width: 10rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      #floatingTrayTotal {
+        display: none !important;
+      }
+
+      #top {
+        min-height: auto !important;
+        gap: 2rem !important;
+        padding-bottom: 3rem !important;
+      }
+
+      #top h1,
+      #checkoutPage h1,
+      #trackingPage h1,
+      #successPage h1 {
+        white-space: normal !important;
+        font-size: clamp(2.35rem, 13vw, 3.25rem) !important;
+        line-height: 0.95 !important;
+        letter-spacing: -0.035em !important;
+      }
+
+      #menu h2,
+      #how h2,
+      #recipes h2,
+      footer h2,
+      #recipeLibrary h3 {
+        font-size: clamp(2rem, 10vw, 2.85rem) !important;
+        line-height: 1 !important;
+        letter-spacing: -0.035em !important;
+      }
+
+      #recipeModalTitle {
+        font-size: clamp(2rem, 10vw, 2.85rem) !important;
+        line-height: 1 !important;
+      }
+
+      p,
+      a,
+      span,
+      button,
+      input,
+      label,
+      h1,
+      h2,
+      h3 {
+        overflow-wrap: anywhere;
+      }
+
+      section {
+        margin-bottom: 4rem !important;
+      }
+
+      .glass,
+      .glass-soft {
+        border-radius: 1.45rem !important;
+      }
+
+      article,
+      #recipeLibrary,
+      #recipeModal article {
+        border-radius: 1.55rem !important;
+      }
+
+      .rounded-\[2\.8rem\],
+      .rounded-\[2\.6rem\],
+      .rounded-\[2\.5rem\],
+      .rounded-\[2\.4rem\],
+      .rounded-\[2\.3rem\],
+      .rounded-\[2\.2rem\],
+      .rounded-\[2rem\],
+      .rounded-3xl {
+        border-radius: 1.35rem !important;
+      }
+
+      .p-8,
+      .p-7,
+      .p-6 {
+        padding: 1.25rem !important;
+      }
+
+      .text-8xl {
+        font-size: 4rem !important;
+      }
+
+      .text-7xl,
+      .text-6xl,
+      .text-5xl {
+        font-size: clamp(2rem, 10vw, 3rem) !important;
+      }
+
+      #orders {
+        display: none !important;
+      }
+
+      #orders article .mb-16 {
+        margin-bottom: 2.25rem !important;
+      }
+
+      #orders article h2 {
+        max-width: 12rem;
+        font-size: 2.25rem !important;
+      }
+
+      #orders article .size-24 {
+        width: 4.25rem !important;
+        height: 4.25rem !important;
+        font-size: 2.25rem !important;
+      }
+
+      #provinceDishGrid,
+      #recipeGrid {
+        grid-template-columns: 1fr !important;
+      }
+
+      #provinceDishGrid {
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+        gap: 0.35rem !important;
+      }
+
+      #provinceDishGrid [data-dish-card] {
+        padding: 0.25rem !important;
+        border-radius: 0.65rem !important;
+      }
+
+      #provinceDishGrid [data-dish-card] > .flex {
+        align-items: stretch !important;
+        flex-direction: column !important;
+        gap: 0.25rem !important;
+      }
+
+      #provinceDishGrid [data-dish-card] h3 {
+        display: -webkit-box;
+        min-height: 1.85rem;
+        margin-bottom: 0.25rem !important;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        font-size: 0.58rem !important;
+        line-height: 1.15 !important;
+        text-align: center;
+      }
+
+      #provinceDishGrid [data-dish-card] p {
+        display: none !important;
+      }
+
+      #provinceDishGrid [data-dish-card] > .flex > span {
+        display: none !important;
+      }
+
+      #provinceDishGrid [data-dish-card] button {
+        width: 100%;
+        min-height: 1.55rem;
+        border-radius: 0.5rem !important;
+        padding: 0.25rem 0.1rem !important;
+        font-size: 0.55rem !important;
+        line-height: 1 !important;
+        letter-spacing: 0 !important;
+      }
+
+      #recipeGrid {
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+        gap: 0.35rem !important;
+      }
+
+      #recipeGrid > article {
+        padding: 0.25rem !important;
+        border-radius: 0.65rem !important;
+      }
+
+      #recipeGrid > article > .mb-6 {
+        display: block !important;
+        margin-bottom: 0.25rem !important;
+      }
+
+      #recipeGrid > article > .mb-6 > .grid {
+        width: 100% !important;
+        height: 2.75rem !important;
+        border-radius: 0.55rem !important;
+        font-size: 1.55rem !important;
+      }
+
+      #recipeGrid > article > .mb-6 > .rounded-2xl,
+      #recipeGrid > article > p {
+        display: none !important;
+      }
+
+      #recipeGrid > article h3 {
+        display: -webkit-box !important;
+        min-height: 1.55rem;
+        margin-bottom: 0 !important;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        font-size: 0.52rem !important;
+        line-height: 1.15 !important;
+        text-align: center;
+      }
+
+      #recipeGrid > article button {
+        display: none !important;
+      }
+
+      #provinceTabs,
+      #recipeCategoryTabs {
+        margin-inline: -0.875rem;
+        padding-inline: 0.875rem;
+        scroll-padding-inline: 0.875rem;
+      }
+
+      #provinceDishSearch,
+      #recipeSearch {
+        font-size: 16px !important;
+      }
+
+      .dish-photo-shell {
+        min-height: 2.75rem;
+        border-radius: 0.55rem;
+        margin-bottom: 0.25rem !important;
+      }
+
+      .dish-photo-image {
+        height: 2.75rem;
+      }
+
+      .dish-photo-fallback {
+        font-size: 1.55rem !important;
+      }
+
+      .dish-photo-badge {
+        display: none;
+      }
+
+      #recipeModal {
+        padding: 0.75rem !important;
+      }
+
+      #recipeModal article {
+        max-height: calc(100dvh - 1.5rem);
+        padding: 1.25rem !important;
+      }
+
+      #recipeModal article > button {
+        right: 1rem !important;
+        top: 1rem !important;
+      }
+
+      #recipeModal .pr-14 {
+        padding-right: 3.25rem !important;
+      }
+
+      #trackingPage article[class*="min-h-"] {
+        min-height: 26rem !important;
+      }
+
+      #trackingPage article[class*="min-h-"] .size-20 {
+        width: 3.25rem !important;
+        height: 3.25rem !important;
+        border-radius: 1rem !important;
+        font-size: 1.75rem !important;
+      }
+
+      #trackingPage article[class*="min-h-"] .size-16 {
+        width: 3rem !important;
+        height: 3rem !important;
+        border-radius: 1rem !important;
+        font-size: 1.5rem !important;
+      }
+
+      #trackingPage article[class*="min-h-"] .absolute.left-6.top-6 {
+        left: 1rem !important;
+        top: 1rem !important;
+        max-width: calc(100% - 2rem);
+      }
+
+      #trackingPage article[class*="min-h-"] .rounded-2xl {
+        max-width: 11rem;
+      }
+
+      #deliveryGuide .flex.items-end.justify-between,
+      #deliveryGuide .flex.items-center.justify-between {
+        align-items: flex-start !important;
+        gap: 1rem;
+      }
+
+      #deliveryGuide .mt-5.flex {
+        display: grid !important;
+        gap: 0.5rem !important;
+      }
+
+      footer form {
+        width: 100%;
+      }
+    }
+
+    @media (min-width: 768px) {
+      #top h1 {
+        white-space: nowrap;
+      }
+    }
+
+  </style>
+</head>
+
+<body class="min-h-screen overflow-x-hidden bg-[#120B08] pb-28 text-amber-50 selection:bg-orange-500 selection:text-amber-50">
+
+  <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    <div class="absolute -top-32 right-[-8rem] h-[28rem] w-[28rem] rounded-full bg-orange-500/15 blur-3xl"></div>
+    <div class="absolute top-[32rem] left-[-12rem] h-[34rem] w-[34rem] rounded-full bg-amber-400/12 blur-3xl"></div>
+    <div class="absolute bottom-[-16rem] right-[8%] h-[36rem] w-[36rem] rounded-full bg-lime-500/8 blur-3xl"></div>
+  </div>
+
+  <div
+    id="toast"
+    class="toast fixed bottom-6 left-1/2 z-[80] -translate-x-1/2 rounded-2xl bg-gradient-to-r from-orange-500 via-red-500 to-amber-400 px-5 py-3 text-sm font-black tracking-wide text-amber-50 shadow-[0_0_80px_rgba(255,92,42,0.38)] transition-all duration-300"
+  >
+    热乎乎地加入餐盘了
+  </div>
+
+
+  <!-- 底部悬浮餐盘：外层不拦截页面点击，只让餐盘按钮可点击 -->
+  <div class="floating-tray-shell fixed inset-x-0 bottom-5 z-[75] flex justify-center px-4">
+    <button
+      id="floatingTray"
+      type="button"
+      onclick="openCheckout()"
+      class="floating-tray-button floating-tray-empty relative flex min-h-16 w-[min(24rem,calc(100vw-2rem))] items-center justify-between overflow-visible rounded-[2rem] bg-[#1C100B]/78 px-5 py-3 text-left shadow-[0_24px_90px_rgba(18,11,8,0.58),0_0_80px_rgba(255,122,24,0.18)] backdrop-blur-2xl transition-all duration-300 hover:scale-[1.015] hover:bg-[#24130C]/86 active:scale-[0.98]"
+      aria-label="打开餐盘"
+    >
+      <span class="floating-food one absolute left-16 top-2 text-2xl">🍜</span>
+      <span class="floating-food two absolute right-20 top-2 text-2xl">🥟</span>
+
+      <span class="flex items-center gap-3">
+        <span class="grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-orange-500 via-red-500 to-amber-400 text-2xl shadow-[0_0_60px_rgba(255,92,42,0.32)]">
+          🍽️
+        </span>
+        <span>
+          <span id="floatingTrayTitle" class="block text-sm font-black tracking-wide text-amber-50">餐盘空着</span>
+          <span id="floatingTrayMeta" class="mt-1 block text-xs font-light tracking-wide text-amber-200/55">选几道中国地方菜吧</span>
+        </span>
+      </span>
+
+      <span class="flex items-center gap-3">
+        <span id="floatingTrayTotal" class="hidden rounded-2xl bg-amber-50/[0.08] px-3 py-2 text-xs font-black text-amber-50">¥0</span>
+        <span id="floatingTrayBadge" class="grid size-9 place-items-center rounded-2xl bg-amber-300 text-xs font-black text-[#120B08] shadow-[0_0_50px_rgba(255,176,32,0.35)]">0</span>
+      </span>
+    </button>
+  </div>
+
+
+  <main class="mx-auto w-full max-w-7xl px-5 py-5 sm:px-8 lg:px-10">
+    <!-- 顶部导航 -->
+    <header class="sticky top-4 z-50 mb-12">
+      <nav class="glass ambient-dark flex items-center justify-between rounded-[2rem] px-4 py-3 sm:px-5">
+        <button onclick="showPage('home')" class="flex items-center gap-3 transition-all duration-300 active:scale-[0.98]">
+          <span class="grid size-11 place-items-center rounded-2xl bg-amber-50/[0.075] text-xl">🍜</span>
+          <span class="text-left">
+            <span class="block text-sm font-black tracking-wide">饭永远不到</span>
+            <span class="block text-[10px] font-light tracking-[0.28em] text-amber-200/70">
+              暖胃虚拟厨房
+            </span>
+          </span>
+        </button>
+
+        <div class="hidden items-center gap-7 lg:flex">
+          <a href="#menu" onclick="showPage('home')" class="text-xs font-light tracking-[0.24em] text-amber-100 transition hover:text-amber-50">深夜暖食堂</a>
+          <a href="#recipes" onclick="showPage('home')" class="text-xs font-light tracking-[0.24em] text-amber-100 transition hover:text-amber-50">免费食谱</a>
+          <a href="#how" onclick="showPage('home')" class="text-xs font-light tracking-[0.24em] text-amber-100 transition hover:text-amber-50">玩法说明</a>
+          <a href="#about" onclick="showPage('home')" class="text-xs font-light tracking-[0.24em] text-amber-100 transition hover:text-amber-50">关于我们</a>
+          <a href="#support" onclick="showPage('home')" class="text-xs font-light tracking-[0.24em] text-amber-100 transition hover:text-amber-50">支持项目</a>
+        </div>
+
+        <button
+          onclick="openCheckout()"
+          class="ambient-pink rounded-2xl bg-gradient-to-r from-orange-500 via-red-500 to-amber-400 px-5 py-3 text-xs font-black tracking-wide text-amber-50 transition-all duration-300 hover:bg-orange-400 active:scale-[0.98]"
+        >
+          餐盘 <span id="cartBadge">0</span>
+        </button>
+      </nav>
+    </header>
+
+    <!-- 首页 -->
+    <div id="homePage" class="page">
+      <!-- 首屏：配送与搜索 -->
+      <section id="top" class="grid min-h-[calc(100vh-8rem)] items-center gap-10 pb-20 lg:grid-cols-[1.03fr_0.97fr]">
+        <div>
+          <div class="mb-7 flex flex-wrap gap-3">
+            <button class="glass-soft rounded-full px-4 py-2 text-xs font-light tracking-[0.22em] text-amber-100 transition-all duration-300 hover:bg-amber-50/[0.11] active:scale-[0.98]">
+              配送到 · 12 分钟 · 家里
+            </button>
+            <button class="glass-soft rounded-full px-4 py-2 text-xs font-light tracking-[0.22em] text-amber-100 transition-all duration-300 hover:bg-amber-50/[0.11] active:scale-[0.98]">
+              人民币 ▾
+            </button>
+          </div>
+
+          <p class="mb-5 text-xs font-light tracking-[0.34em] text-orange-300">
+            深夜食欲入口 · 下单但不用付款
+          </p>
+
+          <h1 class="mb-7 max-w-5xl whitespace-nowrap text-[2.35rem] font-black leading-none tracking-[-0.055em] text-amber-50 sm:text-5xl lg:text-6xl xl:text-7xl">
+            点你想吃的，跳过账单。
+          </h1>
+
+          <p class="mb-9 max-w-2xl text-base font-light leading-8 tracking-wide text-orange-100/85 sm:text-lg">
+            浏览来自中国各省的虚拟美食，加入餐盘，点击结算，然后收获一点点无负担的快乐。
+            食物永远不会送到——这正是它的意义。
+          </p>
+
+          <div class="mb-10 max-w-2xl rounded-[2rem] bg-[#120B08]/45 p-3 backdrop-blur-md">
+            <div class="flex items-center gap-3 rounded-[1.55rem] bg-amber-50/[0.06] px-5 py-4">
+              <span class="text-lg text-amber-200/70">⌕</span>
+              <span class="text-sm font-light tracking-wide text-amber-200/70">搜索中国各大省份菜系.....鲁菜，粤菜，川菜，台湾菜等等</span>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-3 sm:flex-row">
+            <a
+              href="#menu"
+              class="ambient-pink rounded-3xl bg-gradient-to-r from-orange-500 via-red-500 to-amber-400 px-7 py-4 text-center text-sm font-black tracking-wide text-amber-50 transition-all duration-300 hover:bg-orange-400 active:scale-[0.98]"
+            >
+              今晚就想吃这个
+            </a>
+            <a
+              href="#recipes"
+              class="rounded-3xl bg-amber-50/[0.075] px-7 py-4 text-center text-sm font-medium tracking-wide text-orange-50 backdrop-blur-md transition-all duration-300 hover:bg-amber-50/[0.14] active:scale-[0.98]"
+            >
+              看看真的能做什么
+            </a>
+          </div>
+
+          <div class="mt-12 grid max-w-xl grid-cols-3 gap-5">
+            <div>
+              <p class="text-3xl font-black tracking-tight">0</p>
+              <p class="mt-1 text-[11px] font-light tracking-widest text-amber-200/45">已满足食欲</p>
+            </div>
+            <div>
+              <p class="text-3xl font-black tracking-tight">¥0</p>
+              <p class="mt-1 text-[11px] font-light tracking-widest text-amber-200/45">累计花费</p>
+            </div>
+            <div>
+              <p class="text-3xl font-black tracking-tight">34</p>
+              <p class="mt-1 text-[11px] font-light tracking-widest text-amber-200/45">省级地区</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 悬浮手机预览 / 购物车入口 -->
+        <div id="orders" class="relative mx-auto w-full max-w-md">
+          <div class="absolute -inset-7 rounded-[3rem] bg-amber-400/12 blur-3xl"></div>
+
+          <div class="glass ambient-cyan ambient-dark relative overflow-hidden rounded-[2.8rem] p-4">
+            <div class="mb-5 flex items-center justify-between px-2 pt-2">
+              <div>
+                <p class="text-[11px] font-light tracking-[0.3em] text-amber-200/45">今日推荐</p>
+                <p class="mt-1 text-lg font-black tracking-tight">石锅拌饭 · 韩国</p>
+              </div>
+              <span class="rounded-2xl bg-amber-50/[0.075] px-4 py-3 text-sm font-black">¥0.00</span>
+            </div>
+
+            <article class="relative mb-4 overflow-hidden rounded-[2.2rem] bg-amber-50/[0.075] p-5">
+              <div class="absolute -right-14 -top-14 size-44 rounded-full bg-orange-500/15 blur-3xl"></div>
+              <div class="mb-16 flex items-start justify-between">
+                <div>
+                  <p class="text-xs font-light tracking-[0.26em] text-orange-300">永远半价</p>
+                  <h2 class="mt-4 max-w-56 text-4xl font-black leading-none tracking-[-0.06em]">
+                    热气腾腾的<br />石锅拌饭
+                  </h2>
+                </div>
+                <div class="grid size-24 place-items-center rounded-[2rem] bg-[#120B08]/45 text-5xl">🍲</div>
+              </div>
+
+              <div class="flex items-end justify-between">
+                <div>
+                  <p class="text-xs font-light tracking-widest text-amber-200/45">预计送达</p>
+                  <p class="mt-1 text-xl font-black">0 分钟 / 永不到</p>
+                </div>
+                <button onclick="addItem('石锅拌饭', '韩国', 0, '🍲')" class="rounded-2xl bg-gradient-to-r from-orange-500 via-red-500 to-amber-400 px-5 py-3 text-xs font-black tracking-wide transition-all duration-300 hover:bg-orange-400 active:scale-[0.96]">
+                  加入
+                </button>
+              </div>
+            </article>
+
+            <div class="mb-4 grid grid-cols-3 gap-3">
+              <div class="rounded-3xl bg-[#120B08]/40 p-4">
+                <p class="text-xl">🏷️</p>
+                <p class="mt-5 text-[11px] font-light tracking-widest text-amber-200/70">永久免费</p>
+              </div>
+              <div class="rounded-3xl bg-[#120B08]/40 p-4">
+                <p class="text-xl">🛵</p>
+                <p class="mt-5 text-[11px] font-light tracking-widest text-amber-200/70">无起送价</p>
+              </div>
+              <div class="rounded-3xl bg-[#120B08]/40 p-4">
+                <p class="text-xl">⚡</p>
+                <p class="mt-5 text-[11px] font-light tracking-widest text-amber-200/70">趁热快乐</p>
+              </div>
+            </div>
+
+            <div class="rounded-[2rem] bg-[#120B08]/45 p-4">
+              <div class="mb-4 flex items-center justify-between">
+                <h3 class="text-base font-black tracking-tight">你的餐盘</h3>
+                <span id="trayCount" class="text-xs font-light tracking-widest text-amber-200/45">0 件商品</span>
+              </div>
+              <div id="miniCart" class="mb-4 space-y-3"></div>
+              <button onclick="openCheckout()" class="w-full rounded-2xl bg-amber-50/[0.08] px-5 py-4 text-sm font-black tracking-wide text-orange-50 transition-all duration-300 hover:bg-amber-50/[0.14] active:scale-[0.98]">
+                去结算 ›
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 优惠标签 -->
+      <section aria-label="优惠信息" class="mb-24 grid gap-4 md:grid-cols-3">
+        <article class="glass-soft rounded-[2rem] p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-amber-50/[0.08] active:scale-[0.98]">
+          <p class="mb-6 text-xs font-light tracking-[0.26em] text-orange-300">半价看起来更香</p>
+          <h2 class="text-2xl font-black tracking-[-0.04em]">每一单，都香到离谱。</h2>
+        </article>
+        <article class="glass-soft rounded-[2rem] p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-amber-50/[0.08] active:scale-[0.98]">
+          <p class="mb-6 text-xs font-light tracking-[0.26em] text-amber-300">免费配送</p>
+          <h2 class="text-2xl font-black tracking-[-0.04em]">没有起送价，也没有套路。</h2>
+        </article>
+        <article class="glass-soft rounded-[2rem] p-6 transition-all duration-300 hover:-translate-y-1 hover:bg-amber-50/[0.08] active:scale-[0.98]">
+          <p class="mb-6 text-xs font-light tracking-[0.26em] text-lime-300">热乎送达感</p>
+          <h2 class="text-2xl font-black tracking-[-0.04em]">虽然永远不到，但路线必须看起来能到。</h2>
+        </article>
+      </section>
+
+      <!-- 深夜暖食堂：全国省级菜单库 -->
+      <section id="menu" class="mb-24 scroll-mt-28">
+        <div class="mb-10 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+          <div>
+            <p class="mb-4 text-xs font-light tracking-[0.32em] text-amber-200/45">第一步 · 中国全省菜单库</p>
+            <h2 class="text-5xl font-black leading-none tracking-[-0.06em] sm:text-6xl">
+              中国全省暖食堂
+            </h2>
+          </div>
+          <p class="max-w-xl text-sm font-light leading-7 tracking-wide text-amber-200/70">
+            已扩充为 34 个省级地区，每个地区至少 15 道地方菜名。可按省份筛选，也可以搜索鲁菜、粤菜、川菜、台湾菜或任意菜名。
+          </p>
+        </div>
+
+        <div class="glass ambient-dark mb-6 rounded-[2.2rem] p-4 sm:p-5">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-center">
+            <div class="flex min-h-14 flex-1 items-center gap-3 rounded-[1.55rem] bg-[#1C100B]/55 px-5 py-4 backdrop-blur-md">
+              <span class="text-lg text-amber-200/55">⌕</span>
+              <input
+                id="provinceDishSearch"
+                type="search"
+                placeholder="搜索中国各大省份菜系.....鲁菜，粤菜，川菜，台湾菜等等"
+                class="min-w-0 flex-1 bg-transparent text-sm font-light tracking-wide text-amber-50 outline-none placeholder:text-amber-200/45"
+                oninput="renderProvinceMenu()"
+              />
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 lg:w-[24rem]">
+              <div class="rounded-2xl bg-amber-50/[0.065] p-4 text-center">
+                <p class="text-2xl font-black tracking-tight">34</p>
+                <p class="mt-1 text-[11px] font-light tracking-wide text-amber-200/45">省级地区</p>
+              </div>
+              <div class="rounded-2xl bg-amber-50/[0.065] p-4 text-center">
+                <p class="text-2xl font-black tracking-tight">15+</p>
+                <p class="mt-1 text-[11px] font-light tracking-wide text-amber-200/45">每地菜名</p>
+              </div>
+              <div class="rounded-2xl bg-amber-50/[0.065] p-4 text-center">
+                <p id="dishTotalCount" class="text-2xl font-black tracking-tight">510</p>
+                <p class="mt-1 text-[11px] font-light tracking-wide text-amber-200/45">可点菜品</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="provinceTabs" class="no-scrollbar mb-6 flex gap-3 overflow-x-auto pb-2"></div>
+
+        <div class="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+          <p id="provinceMenuTitle" class="text-sm font-light leading-7 tracking-wide text-amber-200/70">
+            正在显示：今晚热门
+          </p>
+          <button
+            id="provinceMenuToggle"
+            onclick="toggleAllProvinceDishes()"
+            class="rounded-2xl bg-amber-50/[0.065] px-5 py-3 text-xs font-black tracking-wide text-amber-50 transition-all duration-300 hover:bg-amber-50/[0.12] active:scale-[0.96]"
+          >
+            展开全部 510 道
+          </button>
+        </div>
+
+        <div id="provinceDishGrid" class="grid gap-5 md:grid-cols-2 xl:grid-cols-4"></div>
+
+        <div id="provinceCollapseBar" class="mt-8 hidden text-center">
+          <button
+            onclick="collapseProvinceDishes()"
+            class="ambient-pink rounded-3xl bg-gradient-to-r from-orange-500 via-red-500 to-amber-400 px-7 py-4 text-sm font-black tracking-wide text-amber-50 transition-all duration-300 hover:bg-orange-400 active:scale-[0.98]"
+          >
+            收起全部菜品，回到今晚热门 ↑
+          </button>
+        </div>
+      </section>
+
+      <!-- 玩法说明 -->
+      <section id="how" class="mb-24 scroll-mt-28">
+        <div class="mb-10">
+          <p class="mb-4 text-xs font-light tracking-[0.32em] text-amber-200/45">第二步 · 多巴胺循环</p>
+          <h2 class="text-5xl font-black leading-none tracking-[-0.06em] sm:text-6xl">
+            快乐如何发生
+          </h2>
+          <p class="mt-6 max-w-xl text-sm font-light leading-7 tracking-wide text-amber-200/70">
+            三次点击，获得一次无负担奖励。不需要账号，也不需要真实银行卡。
+          </p>
+        </div>
+
+        <div class="grid gap-5 lg:grid-cols-3">
+          <article class="glass-soft rounded-[2.2rem] p-7 transition-all duration-300 hover:-translate-y-1 hover:bg-amber-50/[0.08] active:scale-[0.98]">
+            <p class="mb-12 text-6xl font-black tracking-[-0.08em] text-amber-50/15">01</p>
+            <h3 class="mb-4 text-2xl font-black tracking-[-0.04em]">填满购物车</h3>
+            <p class="text-sm font-light leading-7 tracking-wide text-amber-200/70">
+              从不同菜系里疯狂加菜，随意定制这份虚拟订单。
+            </p>
+          </article>
+
+          <article class="glass-soft rounded-[2.2rem] p-7 transition-all duration-300 hover:-translate-y-1 hover:bg-amber-50/[0.08] active:scale-[0.98]">
+            <p class="mb-12 text-6xl font-black tracking-[-0.08em] text-amber-50/15">02</p>
+            <h3 class="mb-4 text-2xl font-black tracking-[-0.04em]">进入结算页</h3>
+            <p class="text-sm font-light leading-7 tracking-wide text-amber-200/70">
+              检查餐品、配送地址、优惠和虚拟支付方式。
+            </p>
+          </article>
+
+          <article class="glass-soft rounded-[2.2rem] p-7 transition-all duration-300 hover:-translate-y-1 hover:bg-amber-50/[0.08] active:scale-[0.98]">
+            <p class="mb-12 text-6xl font-black tracking-[-0.08em] text-amber-50/15">03</p>
+            <h3 class="mb-4 text-2xl font-black tracking-[-0.04em]">完成虚拟下单</h3>
+            <p class="text-sm font-light leading-7 tracking-wide text-amber-200/70">
+              看倒计时、等通知、收下这份永远不会送达的小快乐。
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <!-- 免费食谱 -->
+      <section id="recipes" class="mb-24 scroll-mt-28">
+        <article class="glass ambient-dark relative mb-7 overflow-hidden rounded-[2.8rem] p-7 sm:p-10 lg:p-12">
+          <div class="absolute right-[-10rem] top-[-10rem] size-96 rounded-full bg-orange-500/10 blur-3xl"></div>
+          <div class="grid gap-10 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
+            <div class="grid min-h-72 place-items-center rounded-[2.2rem] bg-[#120B08]/45 text-8xl">
+              🧑‍🍳
+            </div>
+            <div>
+              <p class="mb-5 text-xs font-light tracking-[0.32em] text-amber-300">免费食谱</p>
+              <h2 class="mb-7 text-5xl font-black leading-none tracking-[-0.06em] sm:text-6xl">
+                外卖不到，<br />做法要到。
+              </h2>
+              <p class="mb-8 max-w-2xl text-sm font-light leading-7 tracking-wide text-amber-100">
+                这里放入一批中国家常菜做法。点开任意菜谱，就能查看食材、步骤、火候提醒和厨房小贴士。
+              </p>
+              <button
+                type="button"
+                onclick="openRecipeLibrary()"
+                class="inline-flex rounded-3xl bg-gradient-to-r from-orange-500 via-red-500 to-amber-400 px-7 py-4 text-sm font-black tracking-wide text-amber-50 transition-all duration-300 hover:bg-orange-400 active:scale-[0.98]"
+              >
+                点击展开家常菜食谱库 →
+              </button>
+
+              <div class="mt-8 flex flex-wrap gap-3">
+                <span class="rounded-full bg-amber-50/[0.065] px-4 py-2 text-xs font-light tracking-wide text-amber-200/70">川味下饭</span>
+                <span class="rounded-full bg-amber-50/[0.065] px-4 py-2 text-xs font-light tracking-wide text-amber-200/70">快手炒菜</span>
+                <span class="rounded-full bg-amber-50/[0.065] px-4 py-2 text-xs font-light tracking-wide text-amber-200/70">汤羹炖菜</span>
+                <span class="rounded-full bg-amber-50/[0.065] px-4 py-2 text-xs font-light tracking-wide text-amber-200/70">清蒸白灼</span>
+                <span class="rounded-full bg-amber-50/[0.065] px-4 py-2 text-xs font-light tracking-wide text-amber-200/70">主食拌面</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <div id="recipeLibrary" class="glass-soft hidden rounded-[2.6rem] p-5 sm:p-7">
+          <div class="mb-6 flex items-center justify-between gap-4">
+            <p class="text-xs font-light tracking-[0.28em] text-orange-300">已展开 · 点击菜谱卡片查看详细做法</p>
+            <button
+              type="button"
+              onclick="closeRecipeLibrary()"
+              class="rounded-2xl bg-amber-50/[0.08] px-4 py-3 text-xs font-black tracking-wide text-amber-50 transition-all duration-300 hover:bg-amber-50/[0.14] active:scale-[0.96]"
+            >
+              收起食谱库
+            </button>
+          </div>
+
+          <div class="mb-7 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
+            <div>
+              <p class="mb-3 text-xs font-light tracking-[0.32em] text-amber-200/45">家常菜做法</p>
+              <h3 class="text-4xl font-black leading-none tracking-[-0.055em] text-amber-50 sm:text-5xl">
+                点进去学怎么做
+              </h3>
+            </div>
+
+            <div class="w-full lg:max-w-md">
+              <label class="block">
+                <span class="mb-2 block text-xs font-light tracking-wide text-amber-200/55">搜索菜名 / 地区 / 类型</span>
+                <input
+                  id="recipeSearch"
+                  type="search"
+                  placeholder="例如：番茄炒蛋、川菜、汤、快手"
+                  oninput="if(!recipeLibraryOpened) openRecipeLibrary(); renderHomeRecipes()"
+                  class="min-h-14 w-full rounded-2xl bg-[#1C100B]/60 px-5 text-sm font-light tracking-wide text-amber-50 outline-none placeholder:text-amber-200/40 transition-all duration-300 focus:bg-[#1C100B]/78"
+                />
+              </label>
+            </div>
+          </div>
+
+          <div id="recipeCategoryTabs" class="no-scrollbar mb-6 flex gap-3 overflow-x-auto pb-2"></div>
+          <div id="recipeGrid" class="grid gap-5 md:grid-cols-2 xl:grid-cols-3"></div>
+        </div>
+      </section>
+
+      <!-- 食谱详情弹窗 -->
+      <div id="recipeModal" class="fixed inset-0 z-[95] hidden items-center justify-center bg-[#120B08]/80 p-4 backdrop-blur-xl">
+        <article class="glass ambient-dark relative max-h-[88vh] w-full max-w-4xl overflow-y-auto rounded-[2.8rem] p-6 sm:p-8">
+          <button
+            type="button"
+            onclick="closeRecipe()"
+            class="absolute right-5 top-5 grid size-11 place-items-center rounded-2xl bg-amber-50/[0.08] text-sm font-black text-amber-50 transition-all duration-300 hover:bg-amber-50/[0.14] active:scale-[0.96]"
+          >
+            ×
+          </button>
+
+          <div class="mb-8 pr-14">
+            <p id="recipeModalMeta" class="mb-4 text-xs font-light tracking-[0.32em] text-orange-300"></p>
+            <h2 id="recipeModalTitle" class="text-5xl font-black leading-none tracking-[-0.06em] text-amber-50 sm:text-6xl"></h2>
+            <p id="recipeModalIntro" class="mt-6 max-w-2xl text-sm font-light leading-7 tracking-wide text-amber-100"></p>
+          </div>
+
+          <div class="grid gap-5 lg:grid-cols-[0.86fr_1.14fr]">
+            <section class="rounded-[2rem] bg-[#1C100B]/55 p-5">
+              <p class="mb-4 text-xs font-light tracking-[0.28em] text-amber-300">准备食材</p>
+              <ul id="recipeIngredients" class="space-y-3 text-sm font-light leading-7 tracking-wide text-amber-100"></ul>
+            </section>
+
+            <section class="rounded-[2rem] bg-[#1C100B]/55 p-5">
+              <p class="mb-4 text-xs font-light tracking-[0.28em] text-amber-300">烹饪步骤</p>
+              <ol id="recipeSteps" class="space-y-4 text-sm font-light leading-7 tracking-wide text-amber-100"></ol>
+            </section>
+          </div>
+
+          <div class="mt-5 rounded-[2rem] bg-gradient-to-r from-orange-500/16 via-red-500/12 to-amber-400/16 p-5">
+            <p class="mb-2 text-xs font-light tracking-[0.28em] text-orange-300">厨房小贴士</p>
+            <p id="recipeTips" class="text-sm font-light leading-7 tracking-wide text-amber-100"></p>
+          </div>
+        </article>
+      </div>
+
+      <!-- 关于与支持 -->
+      <section class="mb-24 grid gap-5 lg:grid-cols-[1fr_1fr]" id="about">
+        <article class="glass-soft rounded-[2.5rem] p-8 sm:p-10">
+          <p class="mb-5 text-xs font-light tracking-[0.32em] text-amber-200/45">关于我们</p>
+          <h2 class="mb-6 text-4xl font-black leading-none tracking-[-0.06em] sm:text-5xl">
+            有下单的快乐，<br />没有花钱的压力。
+          </h2>
+          <p class="text-sm font-light leading-7 tracking-wide text-amber-200/70">
+            一个轻松、有趣、假的外卖界面。为食欲、设计感和零焦虑结账体验而生。
+          </p>
+        </article>
+
+        <article id="support" class="glass-soft rounded-[2.5rem] p-8 sm:p-10">
+          <p class="mb-5 text-xs font-light tracking-[0.32em] text-amber-200/45">支持项目</p>
+          <h2 class="mb-6 text-4xl font-black leading-none tracking-[-0.06em] sm:text-5xl">
+            喜欢这种感觉？<br />请我们喝杯咖啡。
+          </h2>
+          <p class="mb-8 text-sm font-light leading-7 tracking-wide text-amber-200/70">
+            用一杯虚拟咖啡，让这间想象厨房继续营业。
+          </p>
+          <a
+            href="#"
+            class="inline-flex rounded-3xl bg-orange-500 px-7 py-4 text-sm font-black tracking-wide text-amber-50 transition-all duration-300 hover:bg-orange-400 active:scale-[0.98]"
+          >
+            ☕ 支持这个项目
+          </a>
+        </article>
+      </section>
+    </div>
+
+    <!-- 结算页 -->
+    <section id="checkoutPage" class="page min-h-[calc(100vh-8rem)] pb-16" hidden>
+      <div class="mb-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <button onclick="showPage('home')" class="mb-8 rounded-2xl bg-amber-50/[0.075] px-5 py-3 text-xs font-black tracking-wide text-orange-50 transition-all duration-300 hover:bg-amber-50/[0.14] active:scale-[0.98]">
+            ← 返回继续选餐
+          </button>
+          <p class="mb-4 text-xs font-light tracking-[0.34em] text-orange-300">
+            第三步 · 完成你的虚拟订单
+          </p>
+          <h1 class="text-6xl font-black leading-[0.88] tracking-[-0.075em] sm:text-7xl lg:text-8xl">
+            确认餐盘。<br />趁热结算。
+          </h1>
+        </div>
+
+        <div class="glass-soft rounded-[2rem] p-5 lg:w-80">
+          <p class="mb-2 text-xs font-light tracking-[0.28em] text-amber-200/45">订单状态</p>
+          <div class="flex items-center gap-3">
+            <span class="grid size-11 place-items-center rounded-2xl bg-orange-500 text-lg shadow-[0_0_70px_rgba(255,92,42,0.34)]">●</span>
+            <div>
+              <p class="text-sm font-black tracking-wide">等待趁热确认</p>
+              <p class="mt-1 text-xs font-light tracking-wide text-amber-200/70">不会扣费，也不会送达</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid gap-5 lg:grid-cols-[1.08fr_0.92fr]">
+        <!-- 左侧：明细、配送、支付 -->
+        <div class="space-y-5">
+          <article class="glass ambient-dark rounded-[2.5rem] p-6 sm:p-8">
+            <div class="mb-7 flex items-center justify-between">
+              <div>
+                <p class="mb-2 text-xs font-light tracking-[0.28em] text-amber-200/45">订单明细</p>
+                <h2 class="text-3xl font-black tracking-[-0.05em]">你的餐盘</h2>
+              </div>
+              <button onclick="clearCart()" class="rounded-2xl bg-amber-50/[0.065] px-4 py-3 text-xs font-black tracking-wide text-amber-100 transition-all duration-300 hover:bg-amber-50/[0.12] active:scale-[0.96]">
+                清空
+              </button>
+            </div>
+
+            <div id="checkoutItems" class="space-y-3"></div>
+
+            <div id="emptyState" class="rounded-[2rem] bg-[#120B08]/45 p-8 text-center">
+              <p class="mb-4 text-5xl">🫥</p>
+              <h3 class="mb-3 text-2xl font-black tracking-[-0.04em]">餐盘还是空的</h3>
+              <p class="mb-6 text-sm font-light leading-7 tracking-wide text-amber-200/70">先去深夜暖食堂随便加几道菜，再回来假装结算。</p>
+              <button onclick="showPage('home'); setTimeout(() => location.hash = '#menu', 60)" class="rounded-3xl bg-gradient-to-r from-orange-500 via-red-500 to-amber-400 px-7 py-4 text-sm font-black tracking-wide text-amber-50 transition-all duration-300 hover:bg-orange-400 active:scale-[0.98]">
+                去选餐
+              </button>
+            </div>
+          </article>
+
+          <div class="grid gap-5 md:grid-cols-2">
+            <article class="glass-soft rounded-[2.3rem] p-6">
+              <p class="mb-5 text-xs font-light tracking-[0.28em] text-amber-300">配送信息</p>
+              <div class="space-y-4">
+                <label class="block">
+                  <span class="mb-2 block text-xs font-light tracking-wide text-amber-200/45">虚拟地址</span>
+                  <input value="你的沙发 · 靠近充电器的位置" class="w-full rounded-2xl bg-[#120B08]/45 px-4 py-4 text-sm font-light tracking-wide text-orange-50 outline-none transition-all duration-300 focus:bg-[#120B08]/65" />
+                </label>
+                <label class="block">
+                  <span class="mb-2 block text-xs font-light tracking-wide text-amber-200/45">备注</span>
+                  <input value="请不要真的送来，谢谢。" class="w-full rounded-2xl bg-[#120B08]/45 px-4 py-4 text-sm font-light tracking-wide text-orange-50 outline-none transition-all duration-300 focus:bg-[#120B08]/65" />
+                </label>
+              </div>
+            </article>
+
+            <article class="glass-soft rounded-[2.3rem] p-6">
+              <p class="mb-5 text-xs font-light tracking-[0.28em] text-lime-300">支付方式</p>
+              <div class="space-y-3">
+                <button class="flex w-full items-center justify-between rounded-2xl bg-amber-50/[0.085] px-4 py-4 text-left transition-all duration-300 hover:bg-amber-50/[0.14] active:scale-[0.98]">
+                  <span>
+                    <span class="block text-sm font-black tracking-wide">虚拟银行卡</span>
+                    <span class="mt-1 block text-xs font-light tracking-wide text-amber-200/70">**** **** **** 0000</span>
+                  </span>
+                  <span class="text-orange-300">✓</span>
+                </button>
+                <button class="flex w-full items-center justify-between rounded-2xl bg-[#120B08]/35 px-4 py-4 text-left transition-all duration-300 hover:bg-[#120B08]/50 active:scale-[0.98]">
+                  <span>
+                    <span class="block text-sm font-black tracking-wide">快乐余额</span>
+                    <span class="mt-1 block text-xs font-light tracking-wide text-amber-200/70">余额无限，实际为零</span>
+                  </span>
+                  <span class="text-amber-200/45">○</span>
+                </button>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <!-- 右侧：结算摘要 -->
+        <aside class="lg:sticky lg:top-32 lg:self-start">
+          <article class="glass ambient-dark rounded-[2.5rem] p-6 sm:p-8">
+            <p class="mb-5 text-xs font-light tracking-[0.32em] text-orange-300">结算摘要</p>
+
+            <div class="mb-8 space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-light tracking-wide text-amber-200/70">餐品小计</span>
+                <span id="subtotal" class="text-sm font-black">¥0.00</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-light tracking-wide text-amber-200/70">半价看起来更香优惠</span>
+                <span id="discount" class="text-sm font-black text-orange-300">-¥0.00</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-light tracking-wide text-amber-200/70">配送费</span>
+                <span class="text-sm font-black text-amber-300">¥0.00</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-light tracking-wide text-amber-200/70">服务费</span>
+                <span class="text-sm font-black">¥0.00</span>
+              </div>
+            </div>
+
+            <div class="mb-8 rounded-[2rem] bg-[#120B08]/45 p-5">
+              <div class="mb-2 flex items-end justify-between">
+                <span class="text-sm font-light tracking-wide text-amber-200/70">应付合计</span>
+                <span id="total" class="text-4xl font-black tracking-[-0.06em]">¥0.00</span>
+              </div>
+              <p class="text-xs font-light leading-6 tracking-wide text-amber-200/45">这是一个虚拟结算页。按钮会触发完成状态，不会产生任何真实支付。</p>
+            </div>
+
+            <button
+              id="payButton"
+              onclick="confirmOrder()"
+              class="ambient-pink mb-4 w-full rounded-3xl bg-orange-500 px-7 py-5 text-sm font-black tracking-wide text-amber-50 transition-all duration-300 hover:bg-orange-400 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-amber-50/[0.085] disabled:text-amber-200/45 disabled:shadow-none"
+            >
+              点击结算
+            </button>
+
+            <button onclick="showPage('home')" class="w-full rounded-3xl bg-amber-50/[0.075] px-7 py-5 text-sm font-black tracking-wide text-orange-50 transition-all duration-300 hover:bg-amber-50/[0.14] active:scale-[0.98]">
+              继续加菜
+            </button>
+
+            <div class="mt-7 grid grid-cols-3 gap-3">
+              <div class="rounded-2xl bg-amber-50/[0.06] p-4 text-center">
+                <p class="mb-2 text-xl">🛵</p>
+                <p class="text-[11px] font-light tracking-wide text-amber-200/70">永不到达</p>
+              </div>
+              <div class="rounded-2xl bg-amber-50/[0.06] p-4 text-center">
+                <p class="mb-2 text-xl">🔒</p>
+                <p class="text-[11px] font-light tracking-wide text-amber-200/70">零扣费</p>
+              </div>
+              <div class="rounded-2xl bg-amber-50/[0.06] p-4 text-center">
+                <p class="mb-2 text-xl">✨</p>
+                <p class="text-[11px] font-light tracking-wide text-amber-200/70">高快乐</p>
+              </div>
+            </div>
+          </article>
+        </aside>
+      </div>
+    </section>
+
+
+    <!-- 虚拟配送追踪页 -->
+    <section id="trackingPage" class="page min-h-[calc(100vh-8rem)] pb-16" hidden>
+      <div class="mb-10">
+        <button onclick="showPage('checkout')" class="mb-8 rounded-2xl bg-amber-50/[0.075] px-5 py-3 text-xs font-black tracking-wide text-orange-50 transition-all duration-300 hover:bg-amber-50/[0.14] active:scale-[0.98]">
+          ← 返回结算页
+        </button>
+
+        <p class="mb-4 text-xs font-light tracking-[0.34em] text-orange-300">
+          虚拟配送追踪 · 低德地图正在绕路
+        </p>
+
+        <h1 class="max-w-5xl text-5xl font-black leading-[0.9] tracking-[-0.065em] text-amber-50 sm:text-6xl lg:text-7xl">
+          商家没有制作，<br />
+          正在召唤使用低德地图的绕路骑手。
+        </h1>
+
+        <p class="mt-7 max-w-2xl text-base font-light leading-8 tracking-wide text-orange-100/85">
+          系统已检测到商家正在认真摆烂。骑手正在使用一款看起来很专业、实际上只会绕路的数字假地图前往你的虚拟地址。
+        </p>
+      </div>
+
+      <div class="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+        <!-- 数字假地图 -->
+        <article class="glass ambient-dark relative min-h-[34rem] overflow-hidden rounded-[2.8rem] p-5 sm:p-7">
+          <div class="absolute inset-0 opacity-70">
+            <div class="absolute left-[8%] top-[12%] h-[1px] w-[84%] bg-amber-100/[0.07]"></div>
+            <div class="absolute left-[8%] top-[28%] h-[1px] w-[84%] bg-amber-100/[0.06]"></div>
+            <div class="absolute left-[8%] top-[44%] h-[1px] w-[84%] bg-amber-100/[0.06]"></div>
+            <div class="absolute left-[8%] top-[60%] h-[1px] w-[84%] bg-amber-100/[0.06]"></div>
+            <div class="absolute left-[8%] top-[76%] h-[1px] w-[84%] bg-amber-100/[0.06]"></div>
+            <div class="absolute left-[18%] top-[8%] h-[84%] w-[1px] bg-amber-100/[0.06]"></div>
+            <div class="absolute left-[36%] top-[8%] h-[84%] w-[1px] bg-amber-100/[0.05]"></div>
+            <div class="absolute left-[55%] top-[8%] h-[84%] w-[1px] bg-amber-100/[0.05]"></div>
+            <div class="absolute left-[74%] top-[8%] h-[84%] w-[1px] bg-amber-100/[0.05]"></div>
+          </div>
+
+          <!-- 更完整的低德地图路线网络：主路线明确从商家到达虚拟地址 -->
+          <svg class="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1000 680" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <filter id="warmRouteGlow" x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur stdDeviation="8" result="blur" />
+                <feColorMatrix
+                  in="blur"
+                  type="matrix"
+                  values="1 0 0 0 1
+                          0 0.55 0 0 0.34
+                          0 0 0.18 0 0.04
+                          0 0 0 0.75 0"
+                  result="glow"
+                />
+                <feMerge>
+                  <feMergeNode in="glow" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              <linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#f97316" />
+                <stop offset="42%" stop-color="#ef4444" />
+                <stop offset="72%" stop-color="#f59e0b" />
+                <stop offset="100%" stop-color="#fde68a" />
+              </linearGradient>
+
+              <linearGradient id="sideRoadGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#fed7aa" stop-opacity="0.05" />
+                <stop offset="50%" stop-color="#fed7aa" stop-opacity="0.22" />
+                <stop offset="100%" stop-color="#fed7aa" stop-opacity="0.05" />
+              </linearGradient>
+            </defs>
+
+            <!-- 城市支路，不再只有几根简单线 -->
+            <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M60 155 C180 120 245 180 355 150 S555 105 700 150 S875 205 960 150" stroke="url(#sideRoadGradient)" stroke-width="10" />
+              <path d="M40 305 C145 255 250 350 370 300 S590 230 720 300 S860 405 970 340" stroke="url(#sideRoadGradient)" stroke-width="12" />
+              <path d="M85 508 C220 425 310 540 455 500 S690 410 870 535" stroke="url(#sideRoadGradient)" stroke-width="11" />
+              <path d="M205 80 C180 210 235 290 205 410 S150 575 230 650" stroke="#fed7aa" stroke-opacity="0.10" stroke-width="9" />
+              <path d="M430 45 C465 185 405 320 475 420 S625 520 585 660" stroke="#fed7aa" stroke-opacity="0.09" stroke-width="9" />
+              <path d="M740 70 C690 215 800 290 755 430 S735 575 825 650" stroke="#fed7aa" stroke-opacity="0.11" stroke-width="9" />
+              <path d="M110 235 L290 245 L405 205 L545 255 L650 230 L820 270 L935 250" stroke="#fed7aa" stroke-opacity="0.08" stroke-width="7" />
+              <path d="M115 430 L270 390 L395 430 L535 382 L690 420 L875 388" stroke="#fed7aa" stroke-opacity="0.08" stroke-width="7" />
+            </g>
+
+            <!-- 主路线底光 -->
+            <path
+              d="M160 240 C235 182 328 198 385 246 C452 304 514 224 590 270 C680 324 598 418 675 470 C735 512 790 452 828 496 C858 532 822 566 760 568"
+              fill="none"
+              stroke="#fb923c"
+              stroke-opacity="0.18"
+              stroke-width="42"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              filter="url(#warmRouteGlow)"
+            />
+
+            <!-- 主路线实体 -->
+            <path
+              d="M160 240 C235 182 328 198 385 246 C452 304 514 224 590 270 C680 324 598 418 675 470 C735 512 790 452 828 496 C858 532 822 566 760 568"
+              fill="none"
+              stroke="url(#routeGradient)"
+              stroke-width="14"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              filter="url(#warmRouteGlow)"
+            />
+
+            <!-- 会动的虚线行驶方向 -->
+            <path
+              class="route-main"
+              d="M160 240 C235 182 328 198 385 246 C452 304 514 224 590 270 C680 324 598 418 675 470 C735 512 790 452 828 496 C858 532 822 566 760 568"
+              fill="none"
+              stroke="#fff7ed"
+              stroke-opacity="0.82"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+
+            <!-- 途经点 -->
+            <g>
+              <circle cx="160" cy="240" r="13" fill="#f97316" filter="url(#warmRouteGlow)" />
+              <circle cx="390" cy="248" r="8" fill="#fed7aa" opacity="0.9" />
+              <circle cx="590" cy="270" r="8" fill="#fed7aa" opacity="0.9" />
+              <circle cx="676" cy="470" r="8" fill="#fed7aa" opacity="0.9" />
+              <circle class="arrival-pulse" cx="760" cy="568" r="24" fill="#f59e0b" opacity="0.30" />
+              <circle cx="760" cy="568" r="14" fill="#fde68a" filter="url(#warmRouteGlow)" />
+            </g>
+
+            <!-- 动态小骑手沿路线运动，视觉上能到达终点 -->
+            <g>
+              <text id="mapRiderIcon" x="0" y="0" font-size="38">
+                🛵
+                <animateMotion
+                  id="mapRiderMotion"
+                  begin="indefinite"
+                  dur="60s"
+                  fill="freeze"
+                  rotate="auto"
+                  path="M160 240 C235 182 328 198 385 246 C452 304 514 224 590 270 C680 324 598 418 675 470 C735 512 790 452 828 496 C858 532 822 566 760 568"
+                />
+              </text>
+            </g>
+          </svg>
+
+          <!-- 商家点 -->
+          <div class="absolute left-[11%] top-[29%]">
+            <div class="grid size-20 place-items-center rounded-[1.7rem] bg-gradient-to-br from-orange-500 via-red-500 to-amber-400 text-4xl shadow-[0_0_90px_rgba(255,92,42,0.36)]">
+              🍜
+            </div>
+            <div class="mt-3 rounded-2xl bg-[#1C100B]/75 px-4 py-3 backdrop-blur-md">
+              <p class="text-xs font-black tracking-wide text-amber-50">商家</p>
+              <p class="mt-1 text-[11px] font-light tracking-wide text-amber-200/55">川香虚拟厨房</p>
+            </div>
+          </div>
+
+          <!-- 骑手点 -->
+          <div class="rider-float absolute left-[48%] top-[40%]">
+            <div class="grid size-16 place-items-center rounded-[1.4rem] bg-amber-300 text-3xl shadow-[0_0_80px_rgba(255,176,32,0.4)]">
+              🛵
+            </div>
+            <div class="mt-3 rounded-2xl bg-[#1C100B]/75 px-4 py-3 backdrop-blur-md">
+              <p class="text-xs font-black tracking-wide text-amber-50">绕路骑手</p>
+              <p class="mt-1 text-[11px] font-light tracking-wide text-amber-200/55">低德地图推荐：跟随 1 分钟路线到达</p>
+            </div>
+          </div>
+
+          <!-- 虚拟地址点 -->
+          <div class="absolute bottom-[14%] right-[8%]">
+            <div class="grid size-20 place-items-center rounded-[1.7rem] bg-amber-50/[0.12] text-4xl shadow-[0_0_90px_rgba(255,244,220,0.12)] backdrop-blur-md">
+              🛋️
+            </div>
+            <div class="mt-3 rounded-2xl bg-[#1C100B]/75 px-4 py-3 text-right backdrop-blur-md">
+              <p class="text-xs font-black tracking-wide text-amber-50">虚拟地址</p>
+              <p class="mt-1 text-[11px] font-light tracking-wide text-amber-200/55">你的沙发 · 充电器旁边</p>
+            </div>
+          </div>
+
+          <div class="absolute left-6 top-6 rounded-2xl bg-[#1C100B]/70 px-4 py-3 backdrop-blur-md">
+            <p class="text-[11px] font-light tracking-[0.28em] text-amber-200/50">低德地图 · 数字假地图</p>
+            <p class="mt-2 text-sm font-black tracking-wide text-amber-50">路线可信度 0.00%</p>
+          </div>
+        </article>
+
+        <!-- 追踪状态 -->
+        <aside class="space-y-5">
+          <article class="glass ambient-dark rounded-[2.6rem] p-6 sm:p-8">
+            <p class="mb-5 text-xs font-light tracking-[0.32em] text-orange-300">当前进度</p>
+
+            <div id="deliveryGuide" class="mb-8">
+              <div class="mb-5 flex items-end justify-between">
+                <div>
+                  <h2 id="deliveryStatusTitle" class="text-4xl font-black leading-none tracking-[-0.055em] text-amber-50">
+                    Delivering
+                  </h2>
+                  <p id="deliveryStatusText" class="mt-3 text-xs font-light leading-6 tracking-wide text-amber-200/60">
+                    Dream about eating it!
+                  </p>
+                </div>
+                <span id="deliveryCountdown" class="rounded-2xl bg-amber-50/[0.08] px-4 py-3 text-sm font-black text-amber-300">
+                  60s
+                </span>
+              </div>
+
+              <div class="relative rounded-[2rem] bg-[#1C100B]/55 p-5">
+                <div class="mb-4 flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <span class="grid size-12 place-items-center rounded-2xl bg-gradient-to-br from-orange-500 via-red-500 to-amber-400 text-2xl shadow-[0_0_60px_rgba(255,92,42,0.32)]">🍜</span>
+                    <span>
+                      <span class="block text-xs font-black tracking-wide text-amber-50">商家</span>
+                      <span class="block text-[11px] font-light tracking-wide text-amber-200/50">川香虚拟厨房</span>
+                    </span>
+                  </div>
+
+                  <div class="text-right">
+                    <span id="deliveredBadge" class="mb-2 hidden rounded-full bg-lime-300 px-4 py-2 text-xs font-black tracking-wide text-[#120B08] shadow-[0_0_60px_rgba(190,242,100,0.28)]">
+                      已送达
+                    </span>
+                    <div class="flex items-center justify-end gap-3">
+                      <span>
+                        <span class="block text-xs font-black tracking-wide text-amber-50">虚拟地址</span>
+                        <span class="block text-[11px] font-light tracking-wide text-amber-200/50">你的沙发</span>
+                      </span>
+                      <span class="grid size-12 place-items-center rounded-2xl bg-amber-50/[0.12] text-2xl backdrop-blur-md">🛋️</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="relative mt-7 h-8 rounded-full bg-amber-50/[0.08] p-1 shadow-[inset_0_1px_0_rgba(255,244,220,0.06)]">
+                  <div class="delivery-fill h-full rounded-full bg-gradient-to-r from-orange-500 via-red-500 to-amber-300 shadow-[0_0_50px_rgba(255,122,24,0.42)]"></div>
+                  <div class="delivery-rider absolute top-1/2 grid size-13 -translate-y-1/2 place-items-center rounded-2xl bg-amber-300 text-2xl shadow-[0_0_70px_rgba(255,176,32,0.5)]">
+                    🛵
+                  </div>
+                </div>
+
+                <div class="mt-5 flex items-center justify-between text-[11px] font-light tracking-wide text-amber-200/50">
+                  <span>开始制作：没有制作</span>
+                  <span>正在召唤：绕路骑手</span>
+                  <span>目标：送达提示</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <div class="rounded-[1.7rem] bg-[#1C100B]/55 p-5">
+                <p class="mb-2 text-sm font-black tracking-wide text-amber-50">商家没有制作</p>
+                <p class="text-xs font-light leading-6 tracking-wide text-amber-200/60">厨房已收到订单，但决定把制作交给你的想象力。</p>
+              </div>
+              <div class="rounded-[1.7rem] bg-[#1C100B]/55 p-5">
+                <p class="mb-2 text-sm font-black tracking-wide text-amber-50">骑手正在引导条前进</p>
+                <p class="text-xs font-light leading-6 tracking-wide text-amber-200/60">骑手会跟随进度条前端移动，1 分钟后抵达虚拟地址。</p>
+              </div>
+              <div class="rounded-[1.7rem] bg-[#1C100B]/55 p-5">
+                <p class="mb-2 text-sm font-black tracking-wide text-amber-50">送达提示</p>
+                <p class="text-xs font-light leading-6 tracking-wide text-amber-200/60">引导完成后，进度条上方会显示“已送达”。</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="glass-soft rounded-[2.4rem] p-6">
+            <p class="mb-4 text-xs font-light tracking-[0.32em] text-amber-300">配送小票</p>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-light tracking-wide text-amber-200/60">商家</span>
+                <span class="text-sm font-black text-amber-50">川香虚拟厨房</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-light tracking-wide text-amber-200/60">目的地</span>
+                <span class="text-sm font-black text-amber-50">你的沙发</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-light tracking-wide text-amber-200/60">地图引擎</span>
+                <span class="text-sm font-black text-orange-300">低德地图</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm font-light tracking-wide text-amber-200/60">真实配送</span>
+                <span class="text-sm font-black text-amber-50">不存在</span>
+              </div>
+            </div>
+
+            <button onclick="showPage('success')" class="ambient-pink mt-7 w-full rounded-3xl bg-gradient-to-r from-orange-500 via-red-500 to-amber-400 px-7 py-5 text-sm font-black tracking-wide text-amber-50 transition-all duration-300 hover:bg-orange-400 active:scale-[0.98]">
+              查看最终订单状态
+            </button>
+          </article>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 完成页 -->
+    <section id="successPage" class="page flex min-h-[calc(100vh-8rem)] items-center pb-16" hidden>
+      <article class="glass ambient-dark mx-auto max-w-3xl rounded-[3rem] p-8 text-center sm:p-12">
+        <div class="mx-auto mb-8 grid size-24 place-items-center rounded-[2rem] bg-orange-500 text-5xl shadow-[0_0_120px_rgba(255,92,42,0.34)]">
+          ✓
+        </div>
+        <p class="mb-5 text-xs font-light tracking-[0.34em] text-orange-300">虚拟订单已完成</p>
+        <h1 class="mb-7 text-6xl font-black leading-[0.88] tracking-[-0.075em] sm:text-7xl">
+          已下单。<br />永远不会送达。
+        </h1>
+        <p class="mx-auto mb-9 max-w-xl text-sm font-light leading-7 tracking-wide text-amber-100">
+          你刚刚完成了一笔完全虚拟的快乐消费。没有真实付款，没有真实配送，只有一份漂亮的结算反馈。
+        </p>
+
+        <div class="mb-9 grid gap-3 sm:grid-cols-3">
+          <div class="rounded-[2rem] bg-[#120B08]/45 p-5">
+            <p class="mb-2 text-2xl font-black">#FNC-000</p>
+            <p class="text-xs font-light tracking-wide text-amber-200/45">订单编号</p>
+          </div>
+          <div class="rounded-[2rem] bg-[#120B08]/45 p-5">
+            <p class="mb-2 text-2xl font-black">0 分钟</p>
+            <p class="text-xs font-light tracking-wide text-amber-200/45">预计送达</p>
+          </div>
+          <div class="rounded-[2rem] bg-[#120B08]/45 p-5">
+            <p class="mb-2 text-2xl font-black">¥0.00</p>
+            <p class="text-xs font-light tracking-wide text-amber-200/45">实际支付</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-3 sm:flex-row sm:justify-center">
+          <button onclick="resetOrder()" class="ambient-pink rounded-3xl bg-gradient-to-r from-orange-500 via-red-500 to-amber-400 px-7 py-4 text-sm font-black tracking-wide text-amber-50 transition-all duration-300 hover:bg-orange-400 active:scale-[0.98]">
+            再点一单
+          </button>
+          <button onclick="showPage('home')" class="rounded-3xl bg-amber-50/[0.085] px-7 py-4 text-sm font-black tracking-wide text-orange-50 transition-all duration-300 hover:bg-amber-50/[0.15] active:scale-[0.98]">
+            返回首页
+          </button>
+        </div>
+      </article>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="pb-8">
+      <section class="glass ambient-dark mb-5 rounded-[2.5rem] p-7 sm:p-9">
+        <div class="grid gap-6 lg:grid-cols-[1fr_0.9fr] lg:items-end">
+          <div>
+            <p class="mb-4 text-xs font-light tracking-[0.32em] text-amber-200/45">每日食欲灵感</p>
+            <h2 class="text-4xl font-black leading-none tracking-[-0.06em] sm:text-5xl">
+              每天一点热乎乎的灵感。
+            </h2>
+          </div>
+
+          <form class="flex flex-col gap-3 sm:flex-row">
+            <input
+              type="email"
+              placeholder="请输入你的邮箱"
+              class="min-h-14 flex-1 rounded-2xl bg-[#120B08]/50 px-5 text-sm font-light tracking-wide text-amber-50 outline-none placeholder:text-amber-200/45"
+            />
+            <button
+              type="button"
+              class="rounded-2xl bg-gradient-to-r from-orange-500 via-red-500 to-amber-400 px-6 py-4 text-sm font-black tracking-wide text-amber-50 transition-all duration-300 hover:bg-orange-400 active:scale-[0.98]"
+            >
+              订阅
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <div class="flex flex-col justify-between gap-5 rounded-[2rem] px-2 py-6 text-xs font-light leading-6 tracking-wide text-amber-200/45 lg:flex-row">
+        <p>饭永远不到 · 没有真实食物 · 没有真实付款 · 但颜色真的很下饭。</p>
+        <div class="flex flex-wrap gap-x-5 gap-y-2">
+          <a href="#recipes" onclick="showPage('home')" class="transition hover:text-amber-100">免费食谱</a>
+          <a href="#top" onclick="showPage('home')" class="transition hover:text-amber-100">开始点单</a>
+          <a href="#about" onclick="showPage('home')" class="transition hover:text-amber-100">关于我们</a>
+          <a href="#support" onclick="showPage('home')" class="transition hover:text-amber-100">支持项目</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    const cart = [];
+
+    const provinceCuisineData = [
+      {
+            "province": "北京",
+            "cuisine": "京味菜",
+            "emoji": "🥟",
+            "dishes": [
+                  "北京烤鸭",
+                  "涮羊肉",
+                  "炸酱面",
+                  "卤煮火烧",
+                  "炒肝",
+                  "爆肚",
+                  "门钉肉饼",
+                  "京酱肉丝",
+                  "老北京炙子烤肉",
+                  "麻豆腐",
+                  "芥末墩",
+                  "豌豆黄",
+                  "艾窝窝",
+                  "驴打滚",
+                  "豆汁焦圈"
+            ]
+      },
+      {
+            "province": "天津",
+            "cuisine": "津门菜",
+            "emoji": "🥞",
+            "dishes": [
+                  "煎饼果子",
+                  "狗不理包子",
+                  "锅巴菜",
+                  "八珍豆腐",
+                  "老爆三",
+                  "罾蹦鲤鱼",
+                  "贴饽饽熬小鱼",
+                  "独面筋",
+                  "耳朵眼炸糕",
+                  "熟梨糕",
+                  "天津麻花",
+                  "银鱼紫蟹火锅",
+                  "清炒虾仁",
+                  "黄焖两样",
+                  "津味素卷圈"
+            ]
+      },
+      {
+            "province": "河北",
+            "cuisine": "冀菜",
+            "emoji": "🍖",
+            "dishes": [
+                  "驴肉火烧",
+                  "金毛狮子鱼",
+                  "正定八大碗",
+                  "保定槐茂酱菜",
+                  "柴沟堡熏肉",
+                  "唐山棋子烧饼",
+                  "沧州火锅鸡",
+                  "承德羊汤",
+                  "白洋淀炖杂鱼",
+                  "邯郸豆沫",
+                  "饶阳豆腐脑",
+                  "香河肉饼",
+                  "定州焖子",
+                  "平泉羊汤",
+                  "张家口莜面"
+            ]
+      },
+      {
+            "province": "山西",
+            "cuisine": "晋菜",
+            "emoji": "🍜",
+            "dishes": [
+                  "山西过油肉",
+                  "刀削面",
+                  "剔尖",
+                  "拨烂子",
+                  "莜面栲栳栳",
+                  "头脑",
+                  "平遥牛肉",
+                  "太谷饼",
+                  "碗托",
+                  "猫耳朵",
+                  "羊杂割",
+                  "定襄蒸肉",
+                  "黄米凉糕",
+                  "临汾牛肉丸子面",
+                  "大同黄糕"
+            ]
+      },
+      {
+            "province": "内蒙古",
+            "cuisine": "蒙餐",
+            "emoji": "🥩",
+            "dishes": [
+                  "手把肉",
+                  "烤全羊",
+                  "奶茶锅",
+                  "羊肉烧麦",
+                  "涮羊肉",
+                  "蒙古血肠",
+                  "奶皮子",
+                  "奶豆腐",
+                  "羊杂汤",
+                  "莜面鱼鱼",
+                  "风干牛肉",
+                  "拔丝奶豆腐",
+                  "蒙古馅饼",
+                  "酸奶饼",
+                  "沙葱炒鸡蛋"
+            ]
+      },
+      {
+            "province": "辽宁",
+            "cuisine": "辽菜",
+            "emoji": "🍲",
+            "dishes": [
+                  "锅包肉",
+                  "酸菜白肉血肠",
+                  "小鸡炖蘑菇",
+                  "沈阳鸡架",
+                  "沟帮子熏鸡",
+                  "老边饺子",
+                  "海城馅饼",
+                  "大连焖子",
+                  "鲅鱼饺子",
+                  "葱烧海参",
+                  "熘肝尖",
+                  "扒肉条",
+                  "辽阳塔糖",
+                  "丹东黄蚬子",
+                  "锦州烧烤"
+            ]
+      },
+      {
+            "province": "吉林",
+            "cuisine": "吉菜",
+            "emoji": "🍄",
+            "dishes": [
+                  "锅包肉",
+                  "延吉冷面",
+                  "打糕",
+                  "朝鲜族辣白菜",
+                  "白肉血肠",
+                  "雪衣豆沙",
+                  "人参鸡汤",
+                  "长白山珍宴",
+                  "酸菜炖粉条",
+                  "粘豆包",
+                  "煎粉",
+                  "鸡汤豆腐串",
+                  "干豆腐卷大葱",
+                  "松花湖鱼宴",
+                  "黄米切糕"
+            ]
+      },
+      {
+            "province": "黑龙江",
+            "cuisine": "龙江菜",
+            "emoji": "🥔",
+            "dishes": [
+                  "哈尔滨红肠",
+                  "锅包肉",
+                  "得莫利炖鱼",
+                  "杀猪菜",
+                  "小鸡炖蘑菇",
+                  "东北乱炖",
+                  "酸菜粉",
+                  "地三鲜",
+                  "粘豆包",
+                  "扒肉条",
+                  "马迭尔冰棍",
+                  "齐齐哈尔烤肉",
+                  "鸡西冷面",
+                  "大列巴",
+                  "筋饼"
+            ]
+      },
+      {
+            "province": "上海",
+            "cuisine": "本帮菜",
+            "emoji": "🥢",
+            "dishes": [
+                  "红烧肉",
+                  "生煎包",
+                  "小笼包",
+                  "响油鳝糊",
+                  "八宝鸭",
+                  "油爆虾",
+                  "腌笃鲜",
+                  "四喜烤麸",
+                  "草头圈子",
+                  "扣三丝",
+                  "排骨年糕",
+                  "葱油拌面",
+                  "糟卤毛豆",
+                  "白斩鸡",
+                  "蟹粉豆腐"
+            ]
+      },
+      {
+            "province": "江苏",
+            "cuisine": "苏菜",
+            "emoji": "🦆",
+            "dishes": [
+                  "松鼠桂鱼",
+                  "盐水鸭",
+                  "狮子头",
+                  "扬州炒饭",
+                  "大煮干丝",
+                  "软兜长鱼",
+                  "开洋蒲菜",
+                  "清炖蟹粉狮子头",
+                  "无锡排骨",
+                  "镇江肴肉",
+                  "鸭血粉丝汤",
+                  "南京烤鸭",
+                  "阳春面",
+                  "蟹黄汤包",
+                  "响油鳝糊"
+            ]
+      },
+      {
+            "province": "浙江",
+            "cuisine": "浙菜",
+            "emoji": "🐟",
+            "dishes": [
+                  "西湖醋鱼",
+                  "东坡肉",
+                  "龙井虾仁",
+                  "叫花鸡",
+                  "宋嫂鱼羹",
+                  "干炸响铃",
+                  "梅干菜扣肉",
+                  "宁波汤圆",
+                  "绍兴醉鸡",
+                  "温州鱼丸",
+                  "糟鸡",
+                  "油焖春笋",
+                  "杭州片儿川",
+                  "三丝敲鱼",
+                  "黄鱼鲞烧肉"
+            ]
+      },
+      {
+            "province": "安徽",
+            "cuisine": "徽菜",
+            "emoji": "🍲",
+            "dishes": [
+                  "臭鳜鱼",
+                  "毛豆腐",
+                  "李鸿章杂烩",
+                  "黄山炖鸽",
+                  "问政山笋",
+                  "徽州一品锅",
+                  "胡适一品锅",
+                  "绩溪挞粿",
+                  "无为板鸭",
+                  "符离集烧鸡",
+                  "腌鲜鳜鱼",
+                  "刀板香",
+                  "葛粉圆子",
+                  "石耳炖鸡",
+                  "八公山豆腐"
+            ]
+      },
+      {
+            "province": "福建",
+            "cuisine": "闽菜",
+            "emoji": "🥣",
+            "dishes": [
+                  "佛跳墙",
+                  "荔枝肉",
+                  "沙茶面",
+                  "海蛎煎",
+                  "土笋冻",
+                  "福州鱼丸",
+                  "醉排骨",
+                  "鸡汤汆海蚌",
+                  "扁肉燕",
+                  "厦门薄饼",
+                  "红糟鸡",
+                  "鼎边糊",
+                  "姜母鸭",
+                  "芋泥",
+                  "白斩河田鸡"
+            ]
+      },
+      {
+            "province": "江西",
+            "cuisine": "赣菜",
+            "emoji": "🌶️",
+            "dishes": [
+                  "三杯鸡",
+                  "藜蒿炒腊肉",
+                  "瓦罐汤",
+                  "南昌拌粉",
+                  "米粉蒸肉",
+                  "鄱阳湖鱼头",
+                  "井冈烟笋",
+                  "余干辣椒炒肉",
+                  "赣南小炒鱼",
+                  "莲花血鸭",
+                  "萍乡炒粉",
+                  "九江茶饼",
+                  "白浇雄鱼头",
+                  "粉蒸肉",
+                  "弋阳年糕"
+            ]
+      },
+      {
+            "province": "山东",
+            "cuisine": "鲁菜",
+            "emoji": "🦐",
+            "dishes": [
+                  "九转大肠",
+                  "葱烧海参",
+                  "糖醋鲤鱼",
+                  "德州扒鸡",
+                  "油爆双脆",
+                  "把子肉",
+                  "爆炒腰花",
+                  "四喜丸子",
+                  "潍坊朝天锅",
+                  "济南甜沫",
+                  "鲅鱼水饺",
+                  "博山酥锅",
+                  "胶东大包",
+                  "孔府一品锅",
+                  "糟溜鱼片"
+            ]
+      },
+      {
+            "province": "河南",
+            "cuisine": "豫菜",
+            "emoji": "🥣",
+            "dishes": [
+                  "烩面",
+                  "胡辣汤",
+                  "桶子鸡",
+                  "洛阳水席",
+                  "鲤鱼焙面",
+                  "道口烧鸡",
+                  "开封灌汤包",
+                  "炒凉粉",
+                  "羊肉汤",
+                  "牡丹燕菜",
+                  "红焖羊肉",
+                  "郑州烩面",
+                  "炸八块",
+                  "汴京烤鸭",
+                  "杞县砂锅"
+            ]
+      },
+      {
+            "province": "湖北",
+            "cuisine": "鄂菜",
+            "emoji": "🐟",
+            "dishes": [
+                  "清蒸武昌鱼",
+                  "热干面",
+                  "排骨藕汤",
+                  "三鲜豆皮",
+                  "荆州鱼糕",
+                  "沔阳三蒸",
+                  "潜江油焖大虾",
+                  "黄陂三合",
+                  "糊汤粉",
+                  "洪湖藕夹",
+                  "襄阳牛肉面",
+                  "孝感米酒",
+                  "公安锅盔",
+                  "珍珠丸子",
+                  "黄州东坡肉"
+            ]
+      },
+      {
+            "province": "湖南",
+            "cuisine": "湘菜",
+            "emoji": "🌶️",
+            "dishes": [
+                  "剁椒鱼头",
+                  "小炒肉",
+                  "毛氏红烧肉",
+                  "辣椒炒肉",
+                  "腊味合蒸",
+                  "东安子鸡",
+                  "永州血鸭",
+                  "湘西外婆菜",
+                  "口味虾",
+                  "擂辣椒皮蛋",
+                  "臭豆腐",
+                  "米粉蒸肉",
+                  "麻辣子鸡",
+                  "攸县香干",
+                  "宁乡花猪肉"
+            ]
+      },
+      {
+            "province": "广东",
+            "cuisine": "粤菜",
+            "emoji": "🥟",
+            "dishes": [
+                  "白切鸡",
+                  "烧鹅",
+                  "蜜汁叉烧",
+                  "肠粉",
+                  "虾饺",
+                  "干炒牛河",
+                  "艇仔粥",
+                  "煲仔饭",
+                  "潮汕牛肉火锅",
+                  "客家盐焗鸡",
+                  "梅菜扣肉",
+                  "豉汁蒸排骨",
+                  "清蒸石斑",
+                  "双皮奶",
+                  "老火靓汤"
+            ]
+      },
+      {
+            "province": "广西",
+            "cuisine": "桂菜",
+            "emoji": "🍜",
+            "dishes": [
+                  "螺蛳粉",
+                  "桂林米粉",
+                  "老友粉",
+                  "啤酒鱼",
+                  "柠檬鸭",
+                  "荔浦芋扣肉",
+                  "纸包鸡",
+                  "酸笋炒牛肉",
+                  "巴马香猪",
+                  "横县鱼生",
+                  "柳州鸭脚煲",
+                  "梧州龟苓膏",
+                  "田螺酿",
+                  "酸嘢",
+                  "阳朔田螺酿"
+            ]
+      },
+      {
+            "province": "海南",
+            "cuisine": "琼菜",
+            "emoji": "🥥",
+            "dishes": [
+                  "文昌鸡",
+                  "海南鸡饭",
+                  "加积鸭",
+                  "东山羊",
+                  "和乐蟹",
+                  "清补凉",
+                  "椰子饭",
+                  "抱罗粉",
+                  "海南粉",
+                  "陵水酸粉",
+                  "糟粕醋火锅",
+                  "椰奶鸡",
+                  "临高烤乳猪",
+                  "儋州米烂",
+                  "斋菜煲"
+            ]
+      },
+      {
+            "province": "重庆",
+            "cuisine": "渝菜",
+            "emoji": "🔥",
+            "dishes": [
+                  "重庆火锅",
+                  "小面",
+                  "毛血旺",
+                  "辣子鸡",
+                  "酸辣粉",
+                  "万州烤鱼",
+                  "泉水鸡",
+                  "江湖水煮鱼",
+                  "黔江鸡杂",
+                  "璧山兔",
+                  "豆花饭",
+                  "合川肉片",
+                  "邮亭鲫鱼",
+                  "梁平张鸭子",
+                  "山城烧鸡公"
+            ]
+      },
+      {
+            "province": "四川",
+            "cuisine": "川菜",
+            "emoji": "🌶️",
+            "dishes": [
+                  "麻婆豆腐",
+                  "宫保鸡丁",
+                  "回锅肉",
+                  "鱼香肉丝",
+                  "水煮牛肉",
+                  "夫妻肺片",
+                  "担担面",
+                  "甜水面",
+                  "钵钵鸡",
+                  "口水鸡",
+                  "蒜泥白肉",
+                  "樟茶鸭",
+                  "东坡肘子",
+                  "辣子兔丁",
+                  "冒菜"
+            ]
+      },
+      {
+            "province": "贵州",
+            "cuisine": "黔菜",
+            "emoji": "酸",
+            "dishes": [
+                  "酸汤鱼",
+                  "丝娃娃",
+                  "肠旺面",
+                  "花溪牛肉粉",
+                  "辣子鸡",
+                  "折耳根炒腊肉",
+                  "豆米火锅",
+                  "青岩猪脚",
+                  "凯里酸汤粉",
+                  "糟辣脆皮鱼",
+                  "遵义羊肉粉",
+                  "恋爱豆腐果",
+                  "宫保鸡丁",
+                  "米豆腐",
+                  "洋芋粑粑"
+            ]
+      },
+      {
+            "province": "云南",
+            "cuisine": "滇菜",
+            "emoji": "🍄",
+            "dishes": [
+                  "过桥米线",
+                  "汽锅鸡",
+                  "野生菌火锅",
+                  "宣威火腿",
+                  "大救驾",
+                  "乳扇",
+                  "宜良烤鸭",
+                  "傣味柠檬鸡",
+                  "菠萝饭",
+                  "包烧鱼",
+                  "小锅米线",
+                  "砂锅鱼",
+                  "鸡枞菌炒肉",
+                  "破酥包",
+                  "鲜花饼"
+            ]
+      },
+      {
+            "province": "西藏",
+            "cuisine": "藏餐",
+            "emoji": "🥣",
+            "dishes": [
+                  "酥油茶",
+                  "糌粑",
+                  "藏式牦牛肉",
+                  "青稞酒",
+                  "藏面",
+                  "牦牛肉干",
+                  "风干羊肉",
+                  "甜茶",
+                  "藏式血肠",
+                  "土豆包子",
+                  "酸奶饭",
+                  "奶渣饼",
+                  "羊血肠",
+                  "藏式火锅",
+                  "鲁朗石锅鸡"
+            ]
+      },
+      {
+            "province": "陕西",
+            "cuisine": "陕菜",
+            "emoji": "🥙",
+            "dishes": [
+                  "羊肉泡馍",
+                  "肉夹馍",
+                  "凉皮",
+                  "臊子面",
+                  "biangbiang面",
+                  "葫芦鸡",
+                  "水盆羊肉",
+                  "腊汁肉夹馍",
+                  "粉汤羊血",
+                  "油泼面",
+                  "甑糕",
+                  "浆水鱼鱼",
+                  "金线油塔",
+                  "锅盔",
+                  "岐山擀面皮"
+            ]
+      },
+      {
+            "province": "甘肃",
+            "cuisine": "陇菜",
+            "emoji": "🍜",
+            "dishes": [
+                  "兰州牛肉面",
+                  "手抓羊肉",
+                  "浆水面",
+                  "酿皮",
+                  "灰豆子",
+                  "甜胚子",
+                  "敦煌驴肉黄面",
+                  "羊肉垫卷子",
+                  "武威三套车",
+                  "靖远羊羔肉",
+                  "陇西腊肉",
+                  "炒拨拉",
+                  "高担酿皮",
+                  "臊子面",
+                  "张掖搓鱼子"
+            ]
+      },
+      {
+            "province": "青海",
+            "cuisine": "青海风味",
+            "emoji": "🥩",
+            "dishes": [
+                  "青海手抓羊肉",
+                  "尕面片",
+                  "羊肠面",
+                  "酿皮",
+                  "甜醅",
+                  "牦牛肉干",
+                  "狗浇尿油饼",
+                  "青海土火锅",
+                  "酸奶",
+                  "炮仗面",
+                  "杂碎汤",
+                  "烤羊排",
+                  "寸寸面",
+                  "熬茶",
+                  "青稞饼"
+            ]
+      },
+      {
+            "province": "宁夏",
+            "cuisine": "宁夏风味",
+            "emoji": "🐑",
+            "dishes": [
+                  "羊肉臊子面",
+                  "手抓羊肉",
+                  "烩羊杂碎",
+                  "盐池滩羊",
+                  "宁夏烩小吃",
+                  "羊肉泡馍",
+                  "辣糊糊",
+                  "清炖羊肉",
+                  "羊肉搓面",
+                  "枸杞芽炒蛋",
+                  "馓子",
+                  "油香",
+                  "蒿子面",
+                  "羊羔肉",
+                  "中卫蒿子面"
+            ]
+      },
+      {
+            "province": "新疆",
+            "cuisine": "新疆菜",
+            "emoji": "🍢",
+            "dishes": [
+                  "大盘鸡",
+                  "烤羊肉串",
+                  "手抓饭",
+                  "馕坑肉",
+                  "拉条子",
+                  "烤包子",
+                  "椒麻鸡",
+                  "薄皮包子",
+                  "羊杂汤",
+                  "过油肉拌面",
+                  "纳仁",
+                  "馕包肉",
+                  "缸子肉",
+                  "酸奶疙瘩",
+                  "库车大馕"
+            ]
+      },
+      {
+            "province": "台湾",
+            "cuisine": "台湾菜",
+            "emoji": "🍱",
+            "dishes": [
+                  "卤肉饭",
+                  "牛肉面",
+                  "蚵仔煎",
+                  "三杯鸡",
+                  "盐酥鸡",
+                  "大肠包小肠",
+                  "担仔面",
+                  "鼎边锉",
+                  "姜母鸭",
+                  "台式肉圆",
+                  "凤梨酥",
+                  "珍珠奶茶",
+                  "筒仔米糕",
+                  "棺材板",
+                  "花枝羹"
+            ]
+      },
+      {
+            "province": "香港",
+            "cuisine": "港式风味",
+            "emoji": "🍚",
+            "dishes": [
+                  "烧腊饭",
+                  "港式云吞面",
+                  "菠萝油",
+                  "丝袜奶茶",
+                  "避风塘炒蟹",
+                  "干炒牛河",
+                  "车仔面",
+                  "鱼蛋粉",
+                  "碗仔翅",
+                  "鸡蛋仔",
+                  "叉烧饭",
+                  "咖喱鱼蛋",
+                  "港式蛋挞",
+                  "瑞士鸡翼",
+                  "煲仔饭"
+            ]
+      },
+      {
+            "province": "澳门",
+            "cuisine": "澳门风味",
+            "emoji": "🥧",
+            "dishes": [
+                  "葡式蛋挞",
+                  "猪扒包",
+                  "非洲鸡",
+                  "葡国鸡",
+                  "水蟹粥",
+                  "马介休球",
+                  "木糠布甸",
+                  "咖喱牛腩",
+                  "大菜糕",
+                  "免治牛肉饭",
+                  "澳门烧肉",
+                  "竹升面",
+                  "虾子捞面",
+                  "杏仁饼",
+                  "葡式海鲜饭"
+            ]
+      }
+];
+
+    const dishEmojis = ['🥟','🍜','🍲','🥘','🍛','🍚','🍢','🍖','🦆','🐟','🦐','🌶️','🥥','🥧','🍵','🔥'];
+    let activeProvince = '热门';
+    let showAllDishes = false;
+
+    const demoItems = provinceCuisineData.flatMap((region, regionIndex) =>
+      region.dishes.map((dish, dishIndex) => ({
+        key: `${region.province}__${dish}`,
+        name: dish,
+        cuisine: `${region.province} · ${region.cuisine}`,
+        province: region.province,
+        price: 18 + ((regionIndex * 7 + dishIndex * 3) % 49),
+        emoji: region.emoji || dishEmojis[(regionIndex + dishIndex) % dishEmojis.length]
+      }))
+    );
+
+
+    const DISH_IMAGE_CACHE_KEY = 'foodNeverComesDishImageCacheV1';
+    const dishImageCache = JSON.parse(localStorage.getItem(DISH_IMAGE_CACHE_KEY) || '{}');
+    const dishImageTasks = {};
+    let dishCardObserver = null;
+
+    function saveDishImageCache() {
+      try {
+        localStorage.setItem(DISH_IMAGE_CACHE_KEY, JSON.stringify(dishImageCache));
+      } catch (error) {
+        console.warn('菜品图片缓存保存失败', error);
+      }
+    }
+
+    function safeEncode(text) {
+      return encodeURIComponent(String(text || '').trim());
+    }
+
+    async function fetchZhWikiThumb(title) {
+      const endpoint = `https://zh.wikipedia.org/w/api.php?action=query&origin=*&format=json&redirects=1&prop=pageimages&piprop=thumbnail&pithumbsize=640&titles=${safeEncode(title)}`;
+      const response = await fetch(endpoint);
+      const data = await response.json();
+      const pages = data?.query?.pages || {};
+      const page = Object.values(pages)[0];
+      return page?.thumbnail?.source || '';
+    }
+
+    async function fetchCommonsThumb(query) {
+      const endpoint = `https://commons.wikimedia.org/w/api.php?action=query&origin=*&format=json&generator=search&gsrsearch=${safeEncode(query)}&gsrnamespace=6&gsrlimit=1&prop=imageinfo&iiprop=url&iiurlwidth=640`;
+      const response = await fetch(endpoint);
+      const data = await response.json();
+      const pages = Object.values(data?.query?.pages || {});
+      const first = pages[0];
+      const info = first?.imageinfo?.[0];
+      return info?.thumburl || info?.url || '';
+    }
+
+    async function resolveDishImage(item) {
+      const exactQueries = [
+        item.name,
+        `${item.name} (食品)`,
+        `${item.name} 中国菜`,
+        `${item.name} ${item.province}`,
+        `${item.province} ${item.name}`
+      ];
+
+      for (const query of exactQueries) {
+        try {
+          const thumb = await fetchZhWikiThumb(query);
+          if (thumb) return thumb;
+        } catch (error) {
+          console.warn('维基条目图片获取失败', query, error);
+        }
+      }
+
+      const commonsQueries = [
+        `${item.name} food`,
+        `${item.name} Chinese cuisine`,
+        `${item.province} cuisine food`
+      ];
+
+      for (const query of commonsQueries) {
+        try {
+          const thumb = await fetchCommonsThumb(query);
+          if (thumb) return thumb;
+        } catch (error) {
+          console.warn('Commons 图片获取失败', query, error);
+        }
+      }
+
+      return '';
+    }
+
+    async function ensureDishImage(item) {
+      if (!item?.key) return '';
+      if (dishImageCache[item.key]) return dishImageCache[item.key] === '__none__' ? '' : dishImageCache[item.key];
+      if (dishImageTasks[item.key]) return dishImageTasks[item.key];
+
+      dishImageTasks[item.key] = resolveDishImage(item).then((url) => {
+        dishImageCache[item.key] = url || '__none__';
+        saveDishImageCache();
+        delete dishImageTasks[item.key];
+        return url;
+      }).catch((error) => {
+        console.warn('菜品图片加载失败', item.name, error);
+        dishImageCache[item.key] = '__none__';
+        saveDishImageCache();
+        delete dishImageTasks[item.key];
+        return '';
+      });
+
+      return dishImageTasks[item.key];
+    }
+
+    async function hydrateDishCard(card) {
+      if (!card || card.dataset.hydrating === 'true' || card.dataset.hydrated === 'true') return;
+      const key = card.dataset.dishKey;
+      const item = demoItems.find((entry) => entry.key === key);
+      const img = card.querySelector('[data-dish-image]');
+      const fallback = card.querySelector('[data-dish-fallback]');
+      if (!item || !img) return;
+
+      card.dataset.hydrating = 'true';
+      const url = await ensureDishImage(item);
+      if (url) {
+        img.src = url;
+        img.alt = `${item.name} 真实图片`;
+        img.addEventListener('load', () => {
+          img.classList.add('is-visible');
+          fallback?.classList.add('is-hidden');
+        }, { once: true });
+        img.addEventListener('error', () => {
+          img.removeAttribute('src');
+          fallback?.classList.remove('is-hidden');
+        }, { once: true });
+      }
+      card.dataset.hydrating = 'false';
+      card.dataset.hydrated = 'true';
+    }
+
+    function observeVisibleDishCards() {
+      if (!dishCardObserver) {
+        dishCardObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            hydrateDishCard(entry.target);
+            dishCardObserver.unobserve(entry.target);
+          });
+        }, { rootMargin: '160px 0px' });
+      }
+
+      document.querySelectorAll('[data-dish-card]').forEach((card) => dishCardObserver.observe(card));
+    }
+
+    function renderProvinceFilters() {
+      const container = document.getElementById('provinceTabs');
+      if (!container) return;
+
+      const tabs = ['热门', ...provinceCuisineData.map(region => region.province)];
+      container.innerHTML = tabs.map((name) => `
+        <button
+          type="button"
+          onclick="setActiveProvince('${name}')"
+          class="shrink-0 rounded-2xl ${activeProvince === name ? 'bg-amber-50/[0.12] font-black text-amber-50' : 'bg-amber-50/[0.065] font-light text-amber-100'} px-5 py-3 text-sm tracking-wide transition-all duration-300 hover:bg-amber-50/[0.12] active:scale-[0.96]"
+        >${name === '热门' ? '🔥 今晚热门' : name}</button>
+      `).join('');
+    }
+
+    function setActiveProvince(name) {
+      activeProvince = name;
+      showAllDishes = false;
+      renderProvinceFilters();
+      renderProvinceMenu();
+    }
+
+    function toggleAllProvinceDishes() {
+      const isExpanded = showAllDishes || activeProvince === '全部';
+
+      if (isExpanded) {
+        activeProvince = '热门';
+        showAllDishes = false;
+      } else {
+        activeProvince = '全部';
+        showAllDishes = true;
+      }
+
+      renderProvinceFilters();
+      renderProvinceMenu();
+    }
+
+    function collapseProvinceDishes() {
+      activeProvince = '热门';
+      showAllDishes = false;
+
+      const searchInput = document.getElementById('provinceDishSearch');
+      if (searchInput) searchInput.value = '';
+
+      renderProvinceFilters();
+      renderProvinceMenu();
+
+      const menu = document.getElementById('menu');
+      if (menu) menu.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function getVisibleDishes() {
+      const searchInput = document.getElementById('provinceDishSearch');
+      const query = (searchInput?.value || '').trim().toLowerCase();
+      let dishes = [...demoItems];
+
+      if (query) {
+        dishes = dishes.filter((item) =>
+          item.name.toLowerCase().includes(query) ||
+          item.cuisine.toLowerCase().includes(query) ||
+          item.province.toLowerCase().includes(query)
+        );
+      } else if (!showAllDishes && activeProvince !== '全部') {
+        if (activeProvince === '热门') {
+          dishes = provinceCuisineData.slice(0, 4).flatMap((region, index) =>
+            region.dishes.slice(0, 2).map((dish, dishIndex) => demoItems.find(item => item.name === dish && item.province === region.province))
+          ).filter(Boolean);
+        } else {
+          dishes = dishes.filter((item) => item.province === activeProvince);
+        }
+      }
+
+      return dishes;
+    }
+
+    function renderProvinceMenu() {
+      const grid = document.getElementById('provinceDishGrid');
+      const title = document.getElementById('provinceMenuTitle');
+      const total = document.getElementById('dishTotalCount');
+      if (!grid) return;
+
+      const searchInput = document.getElementById('provinceDishSearch');
+      const query = (searchInput?.value || '').trim();
+      const dishes = getVisibleDishes();
+      const isExpanded = showAllDishes || activeProvince === '全部';
+      const toggleButton = document.getElementById('provinceMenuToggle');
+      const collapseBar = document.getElementById('provinceCollapseBar');
+
+      if (toggleButton) {
+        toggleButton.textContent = isExpanded ? '收起全部菜品' : `展开全部 ${demoItems.length} 道`;
+        toggleButton.setAttribute('aria-expanded', String(isExpanded));
+      }
+
+      if (collapseBar) {
+        collapseBar.classList.toggle('hidden', !isExpanded);
+      }
+
+      if (total) total.textContent = demoItems.length;
+      if (title) {
+        if (query) title.textContent = `搜索结果：${query} · 共 ${dishes.length} 道`;
+        else if (isExpanded) title.textContent = `正在显示：全部 ${demoItems.length} 道中国地方菜名`;
+        else if (activeProvince === '热门') title.textContent = '正在显示：今晚热门 · 从各地随机挑选';
+        else title.textContent = `正在显示：${activeProvince} · 15 道地方菜名`;
+      }
+
+      grid.innerHTML = dishes.map((item) => `
+        <article data-dish-card data-dish-key="${item.key}" class="glass ambient-dark rounded-[2.2rem] p-4 transition-all duration-300 hover:-translate-y-1 active:scale-[0.98]">
+          <div class="dish-photo-shell mb-7">
+            <img data-dish-image class="dish-photo-image" loading="lazy" alt="${item.name}" />
+            <div data-dish-fallback class="dish-photo-fallback text-7xl">${item.emoji}</div>
+            <div class="dish-photo-overlay"></div>
+            <span class="dish-photo-badge">真实图片 · 自动匹配</span>
+          </div>
+          <p class="mb-2 text-xs font-light tracking-[0.26em] text-orange-300">${item.cuisine}</p>
+          <h3 class="mb-5 text-2xl font-black tracking-[-0.04em]">${item.name}</h3>
+          <div class="flex items-center justify-between gap-3">
+            <span class="text-sm font-light text-amber-200/70">地方风味 · 虚拟热卖 · ¥${item.price}</span>
+            <button onclick="addItem('${item.name}', '${item.cuisine}', ${item.price}, '${item.emoji}')" class="rounded-2xl bg-gradient-to-r from-orange-500 via-red-500 to-amber-400 px-4 py-3 text-xs font-black tracking-wide text-amber-50 transition-all duration-300 hover:bg-orange-400 active:scale-[0.96]">加入</button>
+          </div>
+        </article>
+      `).join('') || `
+        <div class="glass-soft rounded-[2.2rem] p-8 text-center md:col-span-2 xl:col-span-4">
+          <p class="mb-4 text-5xl">🫥</p>
+          <h3 class="mb-3 text-2xl font-black tracking-[-0.04em]">没有搜到这道菜</h3>
+          <p class="text-sm font-light leading-7 tracking-wide text-amber-200/70">换个省份、菜名或菜系试试，比如鲁菜、粤菜、川菜、台湾菜。</p>
+        </div>
+      `;
+
+      observeVisibleDishCards();
+    }
+
+
+    const homeRecipeData = [
+      {
+            "id": "tomato-egg",
+            "name": "番茄炒蛋",
+            "region": "全国家常",
+            "category": "快手炒菜",
+            "time": "10 分钟",
+            "difficulty": "入门",
+            "emoji": "🍅",
+            "intro": "酸甜开胃、汤汁拌饭很香，是最适合新手练锅气的家常菜。",
+            "ingredients": [
+                  "番茄 2 个",
+                  "鸡蛋 3 个",
+                  "葱花 少许",
+                  "盐 适量",
+                  "糖 少许",
+                  "食用油 适量"
+            ],
+            "steps": [
+                  "番茄切块，鸡蛋加少许盐打散。",
+                  "热锅宽油，倒入蛋液，半凝固时轻推成大块后盛出。",
+                  "锅中留底油，下番茄炒出汁，可加一点糖平衡酸味。",
+                  "倒回鸡蛋，快速翻匀，按口味补盐，撒葱花出锅。"
+            ],
+            "tips": "蛋先炒到嫩而不老；番茄一定要炒出汁，拌饭才有灵魂。"
+      },
+      {
+            "id": "mapo-tofu",
+            "name": "麻婆豆腐",
+            "region": "四川",
+            "category": "下饭硬菜",
+            "time": "18 分钟",
+            "difficulty": "进阶",
+            "emoji": "🌶️",
+            "intro": "麻、辣、烫、香，豆腐滑嫩，酱汁浓厚，非常适合配米饭。",
+            "ingredients": [
+                  "嫩豆腐 1 盒",
+                  "牛肉末或猪肉末 80g",
+                  "郫县豆瓣酱 1 勺",
+                  "花椒粉 少许",
+                  "蒜末、姜末",
+                  "生抽",
+                  "水淀粉",
+                  "葱花"
+            ],
+            "steps": [
+                  "豆腐切块，用淡盐水轻轻焯 1 分钟，捞出备用。",
+                  "热锅下油，炒香肉末，再下姜蒜和豆瓣酱炒出红油。",
+                  "加入少量清水或高汤，放入豆腐，小火煮 3 到 5 分钟入味。",
+                  "分次淋入水淀粉勾芡，撒花椒粉和葱花出锅。"
+            ],
+            "tips": "豆腐不要大力翻炒，用锅铲轻推，才能保持完整。"
+      },
+      {
+            "id": "fish-fragrant-pork",
+            "name": "鱼香肉丝",
+            "region": "四川",
+            "category": "下饭硬菜",
+            "time": "20 分钟",
+            "difficulty": "进阶",
+            "emoji": "🥢",
+            "intro": "没有鱼，却有鱼香。酸甜咸辣平衡，是经典米饭杀手。",
+            "ingredients": [
+                  "猪里脊 200g",
+                  "木耳",
+                  "胡萝卜",
+                  "青椒",
+                  "泡椒或豆瓣酱",
+                  "葱姜蒜",
+                  "生抽",
+                  "醋",
+                  "糖",
+                  "水淀粉"
+            ],
+            "steps": [
+                  "肉切丝，用盐、生抽、淀粉和少许油抓匀腌 10 分钟。",
+                  "调鱼香汁：生抽、醋、糖、淀粉、少量清水拌匀。",
+                  "热锅下油滑散肉丝，变色后盛出。",
+                  "炒香葱姜蒜和泡椒，下配菜翻炒，再倒回肉丝。",
+                  "淋入鱼香汁，大火快速收汁。"
+            ],
+            "tips": "鱼香汁提前调好，最后大火一收，味道才利落。"
+      },
+      {
+            "id": "kung-pao-chicken",
+            "name": "宫保鸡丁",
+            "region": "四川 / 贵州",
+            "category": "下饭硬菜",
+            "time": "20 分钟",
+            "difficulty": "进阶",
+            "emoji": "🥜",
+            "intro": "鸡丁嫩滑，花生香脆，入口有咸甜酸辣和一点椒香。",
+            "ingredients": [
+                  "鸡腿肉或鸡胸肉 250g",
+                  "花生米",
+                  "干辣椒",
+                  "花椒",
+                  "葱段",
+                  "姜蒜",
+                  "生抽",
+                  "醋",
+                  "糖",
+                  "淀粉"
+            ],
+            "steps": [
+                  "鸡肉切丁，用生抽、淀粉、少量油抓匀。",
+                  "调碗汁：生抽、醋、糖、淀粉和少量清水。",
+                  "热锅下油，炒香干辣椒和花椒，下鸡丁滑炒至变色。",
+                  "加入葱姜蒜，倒入碗汁快速翻炒。",
+                  "最后加入熟花生米，翻匀立即出锅。"
+            ],
+            "tips": "花生最后放，才能保持酥脆。"
+      },
+      {
+            "id": "sour-spicy-potato",
+            "name": "酸辣土豆丝",
+            "region": "全国家常",
+            "category": "快手炒菜",
+            "time": "12 分钟",
+            "difficulty": "入门",
+            "emoji": "🥔",
+            "intro": "清脆酸辣，便宜快手，是家常餐桌上的常驻选手。",
+            "ingredients": [
+                  "土豆 2 个",
+                  "干辣椒",
+                  "蒜末",
+                  "白醋",
+                  "盐",
+                  "食用油",
+                  "青椒丝可选"
+            ],
+            "steps": [
+                  "土豆切细丝，清水反复冲洗去淀粉，沥干。",
+                  "热锅下油，爆香蒜末和干辣椒。",
+                  "下土豆丝大火快炒，沿锅边淋白醋。",
+                  "加盐调味，保持脆感时出锅。"
+            ],
+            "tips": "土豆丝洗掉淀粉，炒出来才清爽不粘。"
+      },
+      {
+            "id": "cola-wings",
+            "name": "可乐鸡翅",
+            "region": "全国家常",
+            "category": "下饭硬菜",
+            "time": "25 分钟",
+            "difficulty": "入门",
+            "emoji": "🍗",
+            "intro": "甜咸浓郁，颜色油亮，几乎不会失败的鸡翅做法。",
+            "ingredients": [
+                  "鸡翅中 8 个",
+                  "可乐 1 小罐",
+                  "生抽",
+                  "老抽 少许",
+                  "姜片",
+                  "料酒",
+                  "盐"
+            ],
+            "steps": [
+                  "鸡翅两面划口，冷水下锅加姜片料酒焯水。",
+                  "锅中少油，把鸡翅煎到两面微黄。",
+                  "加入生抽、少许老抽和可乐，没过鸡翅一半以上。",
+                  "中小火焖煮，最后大火收至酱汁浓亮。"
+            ],
+            "tips": "老抽只要一点点，颜色够了就好，避免发苦。"
+      },
+      {
+            "id": "braised-pork",
+            "name": "红烧肉",
+            "region": "江浙 / 全国",
+            "category": "下饭硬菜",
+            "time": "60 分钟",
+            "difficulty": "进阶",
+            "emoji": "🥘",
+            "intro": "肥而不腻、酱香浓厚，适合周末慢慢炖。",
+            "ingredients": [
+                  "五花肉 500g",
+                  "冰糖",
+                  "生抽",
+                  "老抽",
+                  "料酒",
+                  "葱姜",
+                  "八角 可选"
+            ],
+            "steps": [
+                  "五花肉切块，冷水下锅焯出浮沫。",
+                  "小火炒糖色，加入五花肉翻匀上色。",
+                  "加料酒、生抽、少许老抽、葱姜和热水。",
+                  "小火炖 45 分钟以上，最后开盖收汁。"
+            ],
+            "tips": "炖肉加热水，肉质更容易软糯。"
+      },
+      {
+            "id": "sweet-sour-ribs",
+            "name": "糖醋排骨",
+            "region": "江浙 / 全国",
+            "category": "下饭硬菜",
+            "time": "45 分钟",
+            "difficulty": "进阶",
+            "emoji": "🍖",
+            "intro": "酸甜亮泽，适合家庭聚餐，也是小朋友很爱的口味。",
+            "ingredients": [
+                  "小排 500g",
+                  "姜片",
+                  "料酒",
+                  "生抽",
+                  "香醋",
+                  "冰糖",
+                  "白芝麻"
+            ],
+            "steps": [
+                  "排骨焯水后沥干，锅中少油煎至表面微焦。",
+                  "加入料酒、生抽、冰糖和热水，小火焖煮。",
+                  "排骨软熟后加入香醋，大火收汁。",
+                  "酱汁裹满排骨后撒白芝麻。"
+            ],
+            "tips": "醋分两次放，前段入味，后段保留香气。"
+      },
+      {
+            "id": "di-san-xian",
+            "name": "地三鲜",
+            "region": "东北",
+            "category": "素菜下饭",
+            "time": "25 分钟",
+            "difficulty": "进阶",
+            "emoji": "🍆",
+            "intro": "土豆、茄子、青椒三样素菜，做出浓郁下饭味。",
+            "ingredients": [
+                  "土豆",
+                  "茄子",
+                  "青椒",
+                  "蒜末",
+                  "生抽",
+                  "蚝油",
+                  "糖",
+                  "淀粉"
+            ],
+            "steps": [
+                  "土豆和茄子切滚刀块，青椒切片。",
+                  "土豆煎至金黄，茄子煎软，青椒略炒。",
+                  "调汁：生抽、蚝油、糖、淀粉和水。",
+                  "炒香蒜末，倒回三样食材，淋汁收浓。"
+            ],
+            "tips": "家庭版可以少油煎代替油炸，更轻盈。"
+      },
+      {
+            "id": "green-pepper-pork",
+            "name": "青椒肉丝",
+            "region": "全国家常",
+            "category": "快手炒菜",
+            "time": "15 分钟",
+            "difficulty": "入门",
+            "emoji": "🫑",
+            "intro": "肉丝嫩、青椒脆，是工作日晚饭的高效率选择。",
+            "ingredients": [
+                  "猪肉丝 200g",
+                  "青椒 2 个",
+                  "蒜末",
+                  "生抽",
+                  "料酒",
+                  "淀粉",
+                  "盐"
+            ],
+            "steps": [
+                  "肉丝用生抽、料酒、淀粉抓匀腌制。",
+                  "青椒切丝，蒜切末。",
+                  "热锅滑炒肉丝至变色，盛出。",
+                  "炒香蒜末和青椒，倒回肉丝，补盐调味。"
+            ],
+            "tips": "肉丝先腌再快炒，不容易柴。"
+      },
+      {
+            "id": "garlic-lettuce",
+            "name": "蒜蓉油麦菜",
+            "region": "全国家常",
+            "category": "素菜下饭",
+            "time": "8 分钟",
+            "difficulty": "入门",
+            "emoji": "🥬",
+            "intro": "蒜香清爽，适合给一桌肉菜配一点绿色。",
+            "ingredients": [
+                  "油麦菜",
+                  "蒜末",
+                  "盐",
+                  "蚝油可选",
+                  "食用油"
+            ],
+            "steps": [
+                  "油麦菜洗净切段，沥干水分。",
+                  "热锅下油，小火炒香蒜末。",
+                  "转大火下油麦菜快速翻炒。",
+                  "加盐和少许蚝油，菜叶刚软就出锅。"
+            ],
+            "tips": "全程大火快炒，避免出水太多。"
+      },
+      {
+            "id": "tomato-beef-brisket",
+            "name": "番茄牛腩",
+            "region": "全国家常",
+            "category": "汤炖菜",
+            "time": "90 分钟",
+            "difficulty": "进阶",
+            "emoji": "🍲",
+            "intro": "汤汁酸甜浓郁，牛腩软烂，配米饭或面条都很舒服。",
+            "ingredients": [
+                  "牛腩 500g",
+                  "番茄 3 个",
+                  "洋葱 可选",
+                  "姜片",
+                  "料酒",
+                  "生抽",
+                  "盐"
+            ],
+            "steps": [
+                  "牛腩切块焯水，番茄一半切丁一半切块。",
+                  "炒香姜片和番茄丁，炒出浓汁。",
+                  "加入牛腩和热水，小火炖至软烂。",
+                  "最后加番茄块煮 10 分钟，盐调味。"
+            ],
+            "tips": "先炒番茄丁，汤底会更浓。"
+      },
+      {
+            "id": "steamed-fish",
+            "name": "清蒸鲈鱼",
+            "region": "粤菜 / 全国",
+            "category": "清蒸白灼",
+            "time": "15 分钟",
+            "difficulty": "入门",
+            "emoji": "🐟",
+            "intro": "鲜嫩清爽，靠蒸鱼豉油和热油激发香气。",
+            "ingredients": [
+                  "鲈鱼 1 条",
+                  "葱姜",
+                  "蒸鱼豉油",
+                  "料酒",
+                  "食用油"
+            ],
+            "steps": [
+                  "鱼处理干净，鱼身划刀，放葱姜和少许料酒。",
+                  "水开后上锅蒸 8 到 10 分钟，视鱼大小调整。",
+                  "倒掉盘中腥水，铺葱丝姜丝。",
+                  "淋蒸鱼豉油，再浇热油激香。"
+            ],
+            "tips": "蒸好后倒掉盘底水，腥味会少很多。"
+      },
+      {
+            "id": "braised-eggplant",
+            "name": "红烧茄子",
+            "region": "全国家常",
+            "category": "素菜下饭",
+            "time": "20 分钟",
+            "difficulty": "入门",
+            "emoji": "🍆",
+            "intro": "软糯入味，酱汁浓厚，是素菜里非常下饭的一道。",
+            "ingredients": [
+                  "茄子 2 根",
+                  "蒜末",
+                  "生抽",
+                  "蚝油",
+                  "糖",
+                  "淀粉",
+                  "葱花"
+            ],
+            "steps": [
+                  "茄子切块，撒少许盐静置后挤掉水分。",
+                  "锅中放油，把茄子煎软。",
+                  "调汁：生抽、蚝油、糖、淀粉和清水。",
+                  "炒香蒜末，倒入茄子和酱汁，收浓撒葱花。"
+            ],
+            "tips": "茄子先盐渍，能减少吸油。"
+      },
+      {
+            "id": "dry-fried-beans",
+            "name": "干煸四季豆",
+            "region": "四川 / 全国",
+            "category": "素菜下饭",
+            "time": "25 分钟",
+            "difficulty": "进阶",
+            "emoji": "🫘",
+            "intro": "表皮微皱、香辣干香，越嚼越有味。",
+            "ingredients": [
+                  "四季豆",
+                  "肉末 可选",
+                  "干辣椒",
+                  "花椒",
+                  "蒜末",
+                  "盐",
+                  "生抽"
+            ],
+            "steps": [
+                  "四季豆去筋掰段，充分沥干。",
+                  "少油慢煸至表皮起皱并完全熟透，盛出。",
+                  "炒香肉末、干辣椒、花椒和蒜末。",
+                  "倒回四季豆，加盐和生抽翻匀。"
+            ],
+            "tips": "四季豆必须彻底加热成熟，不能夹生。"
+      },
+      {
+            "id": "twice-cooked-pork",
+            "name": "回锅肉",
+            "region": "四川",
+            "category": "下饭硬菜",
+            "time": "35 分钟",
+            "difficulty": "进阶",
+            "emoji": "🥓",
+            "intro": "肉片微卷，蒜苗香，豆瓣酱香气很足。",
+            "ingredients": [
+                  "二刀肉或五花肉",
+                  "蒜苗",
+                  "郫县豆瓣酱",
+                  "甜面酱可选",
+                  "姜片",
+                  "料酒"
+            ],
+            "steps": [
+                  "猪肉冷水下锅加姜和料酒煮至断生，放凉切片。",
+                  "锅中少油，下肉片煸出油脂，边缘微卷。",
+                  "加入豆瓣酱炒出红油。",
+                  "下蒜苗快速翻炒，调味后出锅。"
+            ],
+            "tips": "肉片不要切太厚，煸出灯盏窝形状最香。"
+      },
+      {
+            "id": "ants-climbing-tree",
+            "name": "蚂蚁上树",
+            "region": "四川 / 重庆",
+            "category": "主食小菜",
+            "time": "18 分钟",
+            "difficulty": "入门",
+            "emoji": "🍜",
+            "intro": "粉丝吸满肉末酱香，名字有趣，味道很下饭。",
+            "ingredients": [
+                  "红薯粉丝",
+                  "肉末",
+                  "豆瓣酱",
+                  "姜蒜末",
+                  "生抽",
+                  "葱花"
+            ],
+            "steps": [
+                  "粉丝提前泡软，剪短备用。",
+                  "炒香肉末、姜蒜和豆瓣酱。",
+                  "加水和生抽，放入粉丝煮至吸汁。",
+                  "汤汁收干后撒葱花。"
+            ],
+            "tips": "粉丝会继续吸水，出锅前保留一点湿润感。"
+      },
+      {
+            "id": "home-style-tofu",
+            "name": "家常豆腐",
+            "region": "全国家常",
+            "category": "素菜下饭",
+            "time": "20 分钟",
+            "difficulty": "入门",
+            "emoji": "⬜",
+            "intro": "豆腐煎香后吸满酱汁，家常但很有满足感。",
+            "ingredients": [
+                  "老豆腐",
+                  "青椒",
+                  "木耳",
+                  "蒜末",
+                  "生抽",
+                  "蚝油",
+                  "水淀粉"
+            ],
+            "steps": [
+                  "老豆腐切片，煎至两面金黄。",
+                  "炒香蒜末，加入青椒和木耳。",
+                  "倒入豆腐，加生抽、蚝油和少量水。",
+                  "小火焖 2 分钟，水淀粉收汁。"
+            ],
+            "tips": "用老豆腐更容易煎出香边。"
+      },
+      {
+            "id": "wintermelon-rib-soup",
+            "name": "冬瓜排骨汤",
+            "region": "全国家常",
+            "category": "汤羹",
+            "time": "60 分钟",
+            "difficulty": "入门",
+            "emoji": "🍵",
+            "intro": "清淡鲜甜，适合想吃热汤但不想太油腻的时候。",
+            "ingredients": [
+                  "排骨",
+                  "冬瓜",
+                  "姜片",
+                  "料酒",
+                  "盐",
+                  "葱花"
+            ],
+            "steps": [
+                  "排骨冷水下锅焯水，洗净浮沫。",
+                  "砂锅或汤锅加排骨、姜片和热水，小火炖 40 分钟。",
+                  "加入冬瓜块继续煮至透明。",
+                  "加盐调味，撒葱花。"
+            ],
+            "tips": "冬瓜后放，避免煮得太碎。"
+      },
+      {
+            "id": "seaweed-egg-soup",
+            "name": "紫菜蛋花汤",
+            "region": "全国家常",
+            "category": "汤羹",
+            "time": "8 分钟",
+            "difficulty": "入门",
+            "emoji": "🥣",
+            "intro": "几分钟完成的热汤，适合给炒饭、面条或便当配一碗。",
+            "ingredients": [
+                  "紫菜",
+                  "鸡蛋 1 个",
+                  "虾皮可选",
+                  "盐",
+                  "香油",
+                  "葱花"
+            ],
+            "steps": [
+                  "锅中烧水，加入紫菜和虾皮。",
+                  "水开后转小火，淋入打散的蛋液。",
+                  "轻轻搅动形成蛋花。",
+                  "加盐、香油和葱花。"
+            ],
+            "tips": "蛋液细细淋入，蛋花会更漂亮。"
+      },
+      {
+            "id": "yangzhou-fried-rice",
+            "name": "扬州炒饭",
+            "region": "江苏",
+            "category": "主食小菜",
+            "time": "15 分钟",
+            "difficulty": "入门",
+            "emoji": "🍚",
+            "intro": "粒粒分明，配料丰富，用隔夜饭最容易成功。",
+            "ingredients": [
+                  "米饭",
+                  "鸡蛋",
+                  "火腿丁",
+                  "虾仁可选",
+                  "青豆胡萝卜玉米粒",
+                  "盐",
+                  "葱花"
+            ],
+            "steps": [
+                  "鸡蛋炒散盛出，配菜焯熟或炒熟。",
+                  "锅中少油，下米饭压散炒热。",
+                  "加入鸡蛋和配菜翻炒均匀。",
+                  "加盐调味，撒葱花。"
+            ],
+            "tips": "米饭偏干更容易炒散，湿饭可以提前摊开放凉。"
+      },
+      {
+            "id": "scallion-oil-noodles",
+            "name": "葱油拌面",
+            "region": "上海 / 江南",
+            "category": "主食小菜",
+            "time": "18 分钟",
+            "difficulty": "入门",
+            "emoji": "🍜",
+            "intro": "葱香浓郁、酱油微甜，一碗面就能解决一餐。",
+            "ingredients": [
+                  "面条",
+                  "小葱",
+                  "生抽",
+                  "老抽",
+                  "糖",
+                  "食用油"
+            ],
+            "steps": [
+                  "小葱切段，小火慢炸至焦香但不糊。",
+                  "加入生抽、老抽和糖，煮成葱油酱汁。",
+                  "面条煮熟过温水，沥干。",
+                  "拌入葱油酱汁即可。"
+            ],
+            "tips": "炸葱要小火，葱香会更干净。"
+      },
+      {
+            "id": "boiled-pork-slices",
+            "name": "水煮肉片",
+            "region": "四川",
+            "category": "下饭硬菜",
+            "time": "30 分钟",
+            "difficulty": "进阶",
+            "emoji": "🔥",
+            "intro": "红油香辣，肉片滑嫩，底菜吸满汤汁。",
+            "ingredients": [
+                  "猪里脊",
+                  "豆芽或青菜",
+                  "豆瓣酱",
+                  "干辣椒",
+                  "花椒",
+                  "姜蒜",
+                  "淀粉"
+            ],
+            "steps": [
+                  "肉片用盐、料酒、淀粉抓匀腌制。",
+                  "底菜焯熟铺碗底。",
+                  "炒香豆瓣酱、姜蒜，加水煮成汤底。",
+                  "下肉片滑熟，连汤倒入碗中。",
+                  "撒辣椒花椒，浇热油激香。"
+            ],
+            "tips": "肉片下锅后不要久煮，变色熟透即可。"
+      },
+      {
+            "id": "hunan-beef",
+            "name": "小炒黄牛肉",
+            "region": "湖南",
+            "category": "下饭硬菜",
+            "time": "18 分钟",
+            "difficulty": "进阶",
+            "emoji": "🥩",
+            "intro": "香辣鲜嫩，芹菜和小米辣让香气很有冲击力。",
+            "ingredients": [
+                  "黄牛肉或牛里脊",
+                  "小米辣",
+                  "芹菜",
+                  "蒜末",
+                  "生抽",
+                  "蚝油",
+                  "淀粉"
+            ],
+            "steps": [
+                  "牛肉逆纹切薄片，加生抽、淀粉、油抓匀。",
+                  "热锅快炒牛肉至变色盛出。",
+                  "炒香蒜末、小米辣和芹菜。",
+                  "倒回牛肉，加蚝油快速翻匀。"
+            ],
+            "tips": "牛肉要逆纹切，且大火快炒，口感才嫩。"
+      },
+      {
+            "id": "blanched-shrimp",
+            "name": "白灼虾",
+            "region": "广东",
+            "category": "清蒸白灼",
+            "time": "10 分钟",
+            "difficulty": "入门",
+            "emoji": "🦐",
+            "intro": "做法极简，重点是虾新鲜和火候刚好。",
+            "ingredients": [
+                  "鲜虾",
+                  "姜片",
+                  "葱段",
+                  "料酒",
+                  "蘸汁：生抽、姜末、醋可选"
+            ],
+            "steps": [
+                  "锅中水开，加入姜片、葱段和少许料酒。",
+                  "下鲜虾煮至变红弯曲。",
+                  "捞出沥水，搭配蘸汁。",
+                  "喜欢弹牙口感可过一下冰水。"
+            ],
+            "tips": "虾变色后不要久煮，肉质会变老。"
+      },
+      {
+            "id": "beef-potato",
+            "name": "土豆炖牛肉",
+            "region": "北方家常",
+            "category": "汤炖菜",
+            "time": "90 分钟",
+            "difficulty": "进阶",
+            "emoji": "🥔",
+            "intro": "牛肉软烂，土豆吸汁，适合一锅端。",
+            "ingredients": [
+                  "牛腩或牛肉块",
+                  "土豆",
+                  "胡萝卜可选",
+                  "姜片",
+                  "八角",
+                  "生抽",
+                  "老抽",
+                  "盐"
+            ],
+            "steps": [
+                  "牛肉焯水，土豆切块。",
+                  "炒香姜片和牛肉，加生抽老抽上色。",
+                  "加热水和香料，小火炖至牛肉变软。",
+                  "加入土豆继续炖至粉糯，盐调味。"
+            ],
+            "tips": "土豆后放，避免炖化。"
+      },
+      {
+            "id": "vinegar-cabbage",
+            "name": "醋溜白菜",
+            "region": "北方家常",
+            "category": "素菜下饭",
+            "time": "10 分钟",
+            "difficulty": "入门",
+            "emoji": "🥬",
+            "intro": "酸香爽脆，便宜又开胃。",
+            "ingredients": [
+                  "白菜",
+                  "干辣椒",
+                  "蒜末",
+                  "醋",
+                  "生抽",
+                  "盐",
+                  "糖"
+            ],
+            "steps": [
+                  "白菜帮和叶分开切片。",
+                  "热锅下油，爆香蒜末和干辣椒。",
+                  "先炒白菜帮，再下白菜叶。",
+                  "沿锅边淋醋，加生抽、盐、糖快炒出锅。"
+            ],
+            "tips": "白菜帮先下锅，口感更均匀。"
+      },
+      {
+            "id": "hand-torn-cabbage",
+            "name": "手撕包菜",
+            "region": "湖南 / 全国",
+            "category": "素菜下饭",
+            "time": "12 分钟",
+            "difficulty": "入门",
+            "emoji": "🥬",
+            "intro": "锅气足、微辣脆爽，比切出来更有口感。",
+            "ingredients": [
+                  "包菜",
+                  "干辣椒",
+                  "蒜片",
+                  "生抽",
+                  "醋",
+                  "盐",
+                  "少许糖"
+            ],
+            "steps": [
+                  "包菜手撕成片，洗净沥干。",
+                  "热锅下油，炒香蒜片和干辣椒。",
+                  "下包菜大火快炒至边缘微焦。",
+                  "加生抽、醋、盐和糖，快速翻匀。"
+            ],
+            "tips": "包菜水分要沥干，锅气才明显。"
+      },
+      {
+            "id": "shrimp-egg",
+            "name": "虾仁滑蛋",
+            "region": "粤式家常",
+            "category": "快手炒菜",
+            "time": "12 分钟",
+            "difficulty": "入门",
+            "emoji": "🍳",
+            "intro": "蛋嫩虾弹，口味清爽，很适合早餐或晚餐。",
+            "ingredients": [
+                  "虾仁",
+                  "鸡蛋 3 个",
+                  "葱花",
+                  "盐",
+                  "白胡椒",
+                  "淀粉水 少许"
+            ],
+            "steps": [
+                  "虾仁用盐和白胡椒抓匀，焯或煎至变色。",
+                  "鸡蛋加盐和少许淀粉水打散。",
+                  "锅中宽油，倒入蛋液和虾仁。",
+                  "小火轻推至蛋液刚凝固，撒葱花出锅。"
+            ],
+            "tips": "蛋不要炒到全干，余温会继续成熟。"
+      }
+];
+
+    let activeRecipeCategory = '全部';
+
+
+    let recipeLibraryOpened = false;
+
+    function openRecipeLibrary() {
+      const library = document.getElementById('recipeLibrary');
+      if (!library) return;
+
+      recipeLibraryOpened = true;
+      library.classList.remove('hidden');
+      renderRecipeCategories();
+      renderHomeRecipes();
+
+      setTimeout(() => {
+        library.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 60);
+    }
+
+    function closeRecipeLibrary() {
+      const library = document.getElementById('recipeLibrary');
+      if (!library) return;
+
+      recipeLibraryOpened = false;
+      library.classList.add('hidden');
+
+      const recipeSection = document.getElementById('recipes');
+      if (recipeSection) {
+        recipeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function renderRecipeCategories() {
+      if (!recipeLibraryOpened) return;
+      const container = document.getElementById('recipeCategoryTabs');
+      if (!container) return;
+
+      const categories = ['全部', ...Array.from(new Set(homeRecipeData.map(recipe => recipe.category)))];
+
+      container.innerHTML = categories.map(category => `
+        <button
+          type="button"
+          onclick="setRecipeCategory('${category}')"
+          class="shrink-0 rounded-2xl ${activeRecipeCategory === category ? 'bg-amber-50/[0.12] font-black text-amber-50' : 'bg-amber-50/[0.065] font-light text-amber-100'} px-5 py-3 text-sm tracking-wide transition-all duration-300 hover:bg-amber-50/[0.12] active:scale-[0.96]"
+        >${category === '全部' ? '🍳 全部做法' : category}</button>
+      `).join('');
+    }
+
+    function setRecipeCategory(category) {
+      activeRecipeCategory = category;
+      renderRecipeCategories();
+      renderHomeRecipes();
+    }
+
+    function getVisibleRecipes() {
+      const query = (document.getElementById('recipeSearch')?.value || '').trim().toLowerCase();
+
+      return homeRecipeData.filter(recipe => {
+        const matchCategory = activeRecipeCategory === '全部' || recipe.category === activeRecipeCategory;
+        const text = `${recipe.name} ${recipe.region} ${recipe.category} ${recipe.intro} ${recipe.ingredients.join(' ')}`.toLowerCase();
+        const matchQuery = !query || text.includes(query);
+        return matchCategory && matchQuery;
+      });
+    }
+
+    function renderHomeRecipes() {
+      if (!recipeLibraryOpened) return;
+      const grid = document.getElementById('recipeGrid');
+      if (!grid) return;
+
+      const recipes = getVisibleRecipes();
+
+      grid.innerHTML = recipes.map(recipe => `
+        <article
+          onclick="openRecipe('${recipe.id}')"
+          aria-label="${recipe.name}"
+          class="glass ambient-dark cursor-pointer rounded-[2.2rem] p-5 transition-all duration-300 hover:-translate-y-1 active:scale-[0.98]"
+        >
+          <h3 class="text-center text-xs font-black leading-tight text-amber-50">${recipe.name}</h3>
+          <div class="grid size-20 place-items-center rounded-[1.7rem] bg-[#120B08]/45 text-5xl">${recipe.emoji}</div>
+        </article>
+      `).join('') || `
+        <div class="glass-soft rounded-[2.2rem] p-8 text-center md:col-span-2 xl:col-span-3">
+          <p class="mb-4 text-5xl">🫥</p>
+          <h3 class="mb-3 text-2xl font-black tracking-[-0.04em]">没有找到这道菜</h3>
+          <p class="text-sm font-light leading-7 tracking-wide text-amber-200/70">换个关键词试试，比如“川菜”“汤”“鸡翅”“豆腐”。</p>
+        </div>
+      `;
+    }
+
+    function openRecipe(id) {
+      const recipe = homeRecipeData.find(item => item.id === id);
+      if (!recipe) return;
+
+      const modal = document.getElementById('recipeModal');
+      document.getElementById('recipeModalMeta').textContent = `${recipe.region} · ${recipe.category} · ${recipe.time} · ${recipe.difficulty}`;
+      document.getElementById('recipeModalTitle').textContent = recipe.name;
+      document.getElementById('recipeModalIntro').textContent = recipe.intro;
+      document.getElementById('recipeIngredients').innerHTML = recipe.ingredients.map(item => `<li class="flex gap-3"><span class="text-orange-300">•</span><span>${item}</span></li>`).join('');
+      document.getElementById('recipeSteps').innerHTML = recipe.steps.map((step, index) => `
+        <li class="flex gap-4">
+          <span class="grid size-8 shrink-0 place-items-center rounded-xl bg-gradient-to-r from-orange-500 via-red-500 to-amber-400 text-xs font-black text-amber-50">${index + 1}</span>
+          <span>${step}</span>
+        </li>
+      `).join('');
+      document.getElementById('recipeTips').textContent = recipe.tips;
+
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeRecipe() {
+      const modal = document.getElementById('recipeModal');
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeRecipe();
+    });
+
+
+    let deliveryTimer = null;
+    let deliveryCountdownTimer = null;
+
+    function showPage(page) {
+      document.getElementById('homePage').hidden = page !== 'home';
+      document.getElementById('checkoutPage').hidden = page !== 'checkout';
+      document.getElementById('trackingPage').hidden = page !== 'tracking';
+      document.getElementById('successPage').hidden = page !== 'success';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      updateUI();
+
+      if (page === 'tracking') {
+        startDeliveryGuide();
+      } else {
+        stopDeliveryGuide(true);
+      }
+    }
+
+    function startMapRouteAnimation() {
+      const motion = document.getElementById('mapRiderMotion');
+      if (!motion || typeof motion.beginElement !== 'function') return;
+
+      try {
+        motion.beginElement();
+      } catch (error) {
+        console.warn('地图骑手动画启动失败', error);
+      }
+    }
+
+    function resetMapRouteAnimation() {
+      const rider = document.getElementById('mapRiderIcon');
+      const motion = document.getElementById('mapRiderMotion');
+      if (!rider || !motion) return;
+
+      const parent = motion.parentNode;
+      const cloned = motion.cloneNode(true);
+      parent.removeChild(motion);
+      parent.appendChild(cloned);
+    }
+
+    function startDeliveryGuide() {
+      const guide = document.getElementById('deliveryGuide');
+      const fill = guide?.querySelector('.delivery-fill');
+      const rider = guide?.querySelector('.delivery-rider');
+      const badge = document.getElementById('deliveredBadge');
+      const title = document.getElementById('deliveryStatusTitle');
+      const text = document.getElementById('deliveryStatusText');
+      const countdown = document.getElementById('deliveryCountdown');
+
+      if (!guide || !fill || !rider) return;
+
+      stopDeliveryGuide(true);
+
+      guide.classList.remove('delivery-arrived');
+      fill.classList.remove('play');
+      rider.classList.remove('play');
+
+      if (badge) badge.classList.add('hidden');
+      if (title) title.textContent = 'Delivering';
+      if (text) text.textContent = 'Dream about eating it!';
+      if (countdown) countdown.textContent = '60s';
+
+      void fill.offsetWidth;
+      fill.classList.add('play');
+      rider.classList.add('play');
+      setTimeout(startMapRouteAnimation, 60);
+
+      let remaining = 60;
+      deliveryCountdownTimer = setInterval(() => {
+        remaining -= 1;
+        if (countdown) countdown.textContent = `${Math.max(remaining, 0)}s`;
+        if (remaining <= 0) {
+          clearInterval(deliveryCountdownTimer);
+        }
+      }, 1000);
+
+      deliveryTimer = setTimeout(() => {
+        guide.classList.add('delivery-arrived');
+        if (badge) badge.classList.remove('hidden');
+        if (title) title.textContent = '已送达';
+        if (text) text.textContent = '骑手已到达虚拟地址。食物依然不会出现，但引导条已经认真完成。';
+        if (countdown) countdown.textContent = '已送达';
+        showToast('已送达虚拟地址');
+      }, 60000);
+    }
+
+    function stopDeliveryGuide(reset) {
+      clearTimeout(deliveryTimer);
+      clearInterval(deliveryCountdownTimer);
+      deliveryTimer = null;
+      deliveryCountdownTimer = null;
+
+      if (!reset) return;
+
+      const guide = document.getElementById('deliveryGuide');
+      const fill = guide?.querySelector('.delivery-fill');
+      const rider = guide?.querySelector('.delivery-rider');
+      const badge = document.getElementById('deliveredBadge');
+      const title = document.getElementById('deliveryStatusTitle');
+      const text = document.getElementById('deliveryStatusText');
+      const countdown = document.getElementById('deliveryCountdown');
+
+      guide?.classList.remove('delivery-arrived');
+      fill?.classList.remove('play');
+      rider?.classList.remove('play');
+
+      if (badge) badge.classList.add('hidden');
+      if (title) title.textContent = 'Delivering';
+      if (text) text.textContent = 'Dream about eating it!';
+      if (countdown) countdown.textContent = '60s';
+
+      resetMapRouteAnimation();
+    }
+
+    function addItem(name, cuisine, price, emoji) {
+      const found = demoItems.find(item => item.name === name) || { name, cuisine, price: 0, emoji };
+      const existing = cart.find(item => item.name === found.name);
+
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        cart.push({ ...found, qty: 1 });
+      }
+
+      updateUI();
+      showToast('热乎乎地加入餐盘了');
+    }
+
+    function removeItem(name) {
+      const index = cart.findIndex(item => item.name === name);
+      if (index === -1) return;
+
+      if (cart[index].qty > 1) {
+        cart[index].qty -= 1;
+      } else {
+        cart.splice(index, 1);
+      }
+
+      updateUI();
+    }
+
+    function clearCart() {
+      cart.splice(0, cart.length);
+      updateUI();
+    }
+
+    function openCheckout() {
+      showPage('checkout');
+    }
+
+    function confirmOrder() {
+      if (cart.length === 0) {
+        showToast('先选几道菜再结算');
+        return;
+      }
+
+      showPage('tracking');
+    }
+
+    function resetOrder() {
+      stopDeliveryGuide(true);
+      clearCart();
+      showPage('home');
+      setTimeout(() => {
+        location.hash = '#menu';
+      }, 80);
+    }
+
+    function getItemCount() {
+      return cart.reduce((sum, item) => sum + item.qty, 0);
+    }
+
+    function getSubtotal() {
+      return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+    }
+
+    function formatPrice(value) {
+      return `¥${value.toFixed(2)}`;
+    }
+
+    function updateUI() {
+      const count = getItemCount();
+      const subtotal = getSubtotal();
+      const discount = subtotal * 0.5;
+      const total = 0;
+
+      document.getElementById('cartBadge').textContent = count;
+      document.getElementById('trayCount').textContent = `${count} 件商品`;
+
+      const miniCart = document.getElementById('miniCart');
+      miniCart.innerHTML = cart.length
+        ? cart.slice(0, 3).map(item => `
+          <div class="flex items-center gap-3 rounded-2xl bg-amber-50/[0.06] p-3">
+            <span class="grid size-10 place-items-center rounded-xl bg-[#120B08]/45 text-xl">${item.emoji}</span>
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-xs font-black tracking-wide">${item.name}</p>
+              <p class="mt-1 text-[11px] font-light tracking-wide text-amber-200/45">× ${item.qty}</p>
+            </div>
+            <span class="text-xs font-black">${formatPrice(item.price)}</span>
+          </div>
+        `).join('')
+        : `<p class="rounded-2xl bg-amber-50/[0.05] p-4 text-center text-xs font-light tracking-wide text-amber-200/45">还没有选餐</p>`;
+
+      const checkoutItems = document.getElementById('checkoutItems');
+      checkoutItems.innerHTML = cart.map(item => `
+        <article class="flex items-center gap-4 rounded-[2rem] bg-[#120B08]/45 p-4 transition-all duration-300 hover:bg-[#120B08]/60">
+          <div class="grid size-16 shrink-0 place-items-center rounded-2xl bg-amber-50/[0.075] text-3xl">${item.emoji}</div>
+          <div class="min-w-0 flex-1">
+            <p class="truncate text-base font-black tracking-tight">${item.name}</p>
+            <p class="mt-1 text-xs font-light tracking-wide text-amber-200/45">${item.cuisine} · 虚拟菜品 · 数量 ${item.qty}</p>
+          </div>
+          <div class="text-right">
+            <p class="mb-2 text-sm font-black">${formatPrice(item.price * item.qty)}</p>
+            <div class="flex items-center gap-2">
+              <button onclick="removeItem('${item.name}')" class="grid size-8 place-items-center rounded-xl bg-amber-50/[0.075] text-sm font-black text-amber-100 transition-all duration-300 hover:bg-amber-50/[0.14] active:scale-[0.92]">−</button>
+              <span class="w-5 text-center text-xs font-black">${item.qty}</span>
+              <button onclick="addItem('${item.name}', '${item.cuisine}', ${item.price}, '${item.emoji}')" class="grid size-8 place-items-center rounded-xl bg-amber-50/[0.075] text-sm font-black text-amber-100 transition-all duration-300 hover:bg-amber-50/[0.14] active:scale-[0.92]">+</button>
+            </div>
+          </div>
+        </article>
+      `).join('');
+
+      document.getElementById('emptyState').hidden = cart.length !== 0;
+      document.getElementById('subtotal').textContent = formatPrice(subtotal);
+      document.getElementById('discount').textContent = `-${formatPrice(discount)}`;
+      document.getElementById('total').textContent = formatPrice(total);
+
+      const payButton = document.getElementById('payButton');
+      payButton.disabled = cart.length === 0;
+      payButton.textContent = cart.length === 0 ? '先选几道想吃的' : '点击结算';
+
+      updateFloatingTray(count, subtotal);
+    }
+
+    let lastFloatingTrayCount = 0;
+
+    function updateFloatingTray(count, subtotal) {
+      const tray = document.getElementById('floatingTray');
+      const title = document.getElementById('floatingTrayTitle');
+      const meta = document.getElementById('floatingTrayMeta');
+      const badge = document.getElementById('floatingTrayBadge');
+      const total = document.getElementById('floatingTrayTotal');
+
+      if (!tray || !title || !meta || !badge || !total) return;
+
+      badge.textContent = count;
+      total.textContent = formatPrice(subtotal);
+      total.classList.toggle('hidden', count === 0);
+      tray.classList.toggle('floating-tray-empty', count === 0);
+
+      if (count === 0) {
+        title.textContent = '餐盘空着';
+        meta.textContent = '选几道中国地方菜吧';
+      } else {
+        const previewNames = cart.slice(0, 2).map(item => item.name).join('、');
+        title.textContent = `${count} 件美食在餐盘里`;
+        meta.textContent = previewNames || '点击查看你的虚拟订单';
+      }
+
+      if (count > lastFloatingTrayCount) {
+        tray.classList.remove('pop');
+        void tray.offsetWidth;
+        tray.classList.add('pop');
+      }
+
+      lastFloatingTrayCount = count;
+    }
+
+    let toastTimer;
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 1500);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderProvinceFilters();
+      renderProvinceMenu();
+      updateUI();
+    });
+    renderProvinceFilters();
+    renderProvinceMenu();
+    updateUI();
+  </script>
+</body>
+</html>
