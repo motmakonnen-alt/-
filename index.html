@@ -862,6 +862,355 @@
       box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18) !important;
     }
 
+    .mobile-food-shell {
+      display: none;
+    }
+
+    @media (max-width: 767px) {
+      body {
+        background: #f4f4f5 !important;
+      }
+
+      header,
+      #top,
+      section[aria-label="优惠信息"],
+      #how,
+      #about,
+      footer {
+        display: none !important;
+      }
+
+      main {
+        padding: 0 !important;
+        max-width: none !important;
+      }
+
+      #homePage {
+        background: #f4f4f5;
+      }
+
+      .mobile-food-shell {
+        display: block;
+        padding-bottom: 0.75rem;
+        background: linear-gradient(180deg, #ff583f 0, #ff3838 11rem, #f4f4f5 11.05rem);
+      }
+
+      .mobile-food-top {
+        position: sticky;
+        top: 0;
+        z-index: 60;
+        padding: 0.75rem 1rem 0.9rem;
+        background: linear-gradient(180deg, #ff583f 0, #ff3838 100%);
+        color: #fff;
+      }
+
+      .mobile-food-status {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 2rem;
+        font-size: 1.2rem;
+        font-weight: 900;
+        color: #111;
+      }
+
+      .mobile-food-icons {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-size: 0.9rem;
+      }
+
+      .mobile-food-titlebar {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 3.2rem;
+        color: #fff;
+      }
+
+      .mobile-food-back {
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 2.25rem;
+        font-weight: 200;
+        line-height: 1;
+      }
+
+      .mobile-food-title {
+        font-size: 1.45rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+      }
+
+      .mobile-food-panel {
+        margin-top: -0.1rem;
+        padding: 1.05rem 0.85rem 0.85rem;
+        border-radius: 1.6rem 1.6rem 0 0;
+        background: #f4f4f5;
+      }
+
+      .mobile-search-box {
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        height: 3.2rem;
+        padding: 0 1rem;
+        border-radius: 999px;
+        background: #fff;
+        box-shadow: 0 0.25rem 1rem rgba(15, 23, 42, 0.06);
+      }
+
+      .mobile-search-box input {
+        width: 100%;
+        border: 0;
+        background: transparent !important;
+        font-size: 1rem !important;
+        font-weight: 600;
+        outline: 0;
+      }
+
+      .mobile-category-row {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 5.2rem;
+        gap: 0.25rem;
+        margin: 1.05rem -0.85rem 0.75rem;
+        padding: 0 0.85rem 0.3rem;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .mobile-category-row::-webkit-scrollbar {
+        display: none;
+      }
+
+      .mobile-category {
+        display: grid;
+        justify-items: center;
+        gap: 0.4rem;
+        border: 0;
+        background: transparent;
+        color: #555;
+        font-size: 0.82rem;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .mobile-category-icon {
+        display: grid;
+        width: 3.55rem;
+        height: 3.55rem;
+        place-items: center;
+        border-radius: 50%;
+        background: #fff;
+        font-size: 1.75rem;
+        box-shadow: 0 0.25rem 1rem rgba(15, 23, 42, 0.06);
+      }
+
+      .mobile-category.is-active {
+        color: #ff7a00;
+      }
+
+      .mobile-category.is-active .mobile-category-icon {
+        background: #fff0d4;
+        box-shadow: inset 0 0 0 0.12rem #ff9d1b;
+      }
+
+      .mobile-filter-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 0.35rem;
+        margin-bottom: 0.7rem;
+        color: #3f3f46;
+        font-size: 0.98rem;
+        font-weight: 900;
+      }
+
+      .mobile-filter-row button,
+      .mobile-chip-row button {
+        border: 0;
+        background: transparent;
+      }
+
+      .mobile-chip-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.55rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .mobile-chip-row button {
+        min-height: 2.2rem;
+        border-radius: 0.45rem;
+        background: #fff;
+        color: #57534e;
+        font-size: 0.85rem;
+        font-weight: 900;
+        box-shadow: 0 0.2rem 0.75rem rgba(15, 23, 42, 0.045);
+      }
+
+      #menu {
+        margin: 0 !important;
+        padding: 0 0.85rem 5.5rem;
+        scroll-margin-top: 0;
+      }
+
+      #menu > .mb-10,
+      #menu > .glass,
+      #provinceTabs,
+      #provinceMenuTitle,
+      #provinceMenuToggle,
+      #provinceCollapseBar {
+        display: none !important;
+      }
+
+      #provinceDishGrid {
+        display: grid;
+        grid-template-columns: 1fr !important;
+        gap: 0.75rem !important;
+      }
+
+      #provinceDishGrid .mobile-shop-card {
+        display: grid;
+        grid-template-columns: 6.15rem minmax(0, 1fr) auto;
+        gap: 0.75rem;
+        align-items: start;
+        min-height: 8.9rem;
+        padding: 0.85rem;
+        border-radius: 1rem;
+        background: #fff;
+        box-shadow: 0 0.25rem 1rem rgba(15, 23, 42, 0.055);
+      }
+
+      .mobile-shop-img {
+        position: relative;
+        overflow: hidden;
+        width: 6.15rem;
+        height: 6.15rem;
+        border-radius: 0.55rem;
+        background: #fff2d8;
+      }
+
+      .mobile-shop-img img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .mobile-shop-img img.is-visible {
+        opacity: 1;
+      }
+
+      .mobile-shop-fallback {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        font-size: 2.6rem;
+      }
+
+      .mobile-shop-fallback.is-hidden {
+        opacity: 0;
+      }
+
+      #provinceDishGrid .mobile-shop-title {
+        display: -webkit-box;
+        margin: 0 0 0.25rem;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 1;
+        color: #1f2937;
+        font-size: 1.12rem;
+        font-weight: 950;
+        line-height: 1.2;
+        text-align: left;
+      }
+
+      #provinceDishGrid .mobile-shop-meta,
+      #provinceDishGrid .mobile-shop-delivery {
+        display: block !important;
+        margin: 0 !important;
+        color: #737373;
+        font-size: 0.78rem;
+        font-weight: 700;
+        line-height: 1.65;
+      }
+
+      #provinceDishGrid .mobile-shop-card p,
+      #provinceDishGrid .mobile-shop-card span {
+        display: revert !important;
+      }
+
+      #provinceDishGrid .mobile-shop-highlight {
+        display: block !important;
+        margin-top: 0.2rem;
+        color: #ff7a00;
+        font-size: 0.92rem;
+        font-weight: 950;
+      }
+
+      .mobile-shop-coupons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.3rem;
+        margin-top: 0.45rem;
+      }
+
+      #provinceDishGrid .mobile-shop-coupons span {
+        border-radius: 0.25rem;
+        background: #fff1f2;
+        color: #f43f5e !important;
+        padding: 0.12rem 0.3rem;
+        font-size: 0.72rem;
+        font-weight: 900;
+      }
+
+      .mobile-shop-side {
+        display: grid;
+        justify-items: end;
+        gap: 0.35rem;
+        color: #9ca3af;
+        font-size: 1.15rem;
+      }
+
+      .mobile-shop-badge {
+        border-radius: 0.25rem;
+        background: #fff4cf;
+        color: #8a5a00 !important;
+        padding: 0.18rem 0.28rem;
+        font-size: 0.72rem;
+        font-weight: 900;
+        white-space: nowrap;
+      }
+
+      .mobile-shop-time {
+        color: #f59e0b !important;
+        font-size: 0.82rem;
+        font-weight: 950;
+        white-space: nowrap;
+      }
+
+      #provinceDishGrid .mobile-shop-add {
+        display: grid;
+        width: 2.4rem;
+        height: 2.4rem;
+        place-items: center;
+        border: 0;
+        border-radius: 50%;
+        background: #ffcf00;
+        color: #111;
+        font-size: 1.45rem;
+        font-weight: 900;
+        box-shadow: 0 0.35rem 1rem rgba(250, 204, 21, 0.35);
+      }
+    }
+
   </style>
 </head>
 
@@ -944,6 +1293,45 @@
 
     <!-- 首页 -->
     <div id="homePage" class="page">
+      <section class="mobile-food-shell" aria-label="没团美食列表">
+        <div class="mobile-food-top">
+          <div class="mobile-food-status">
+            <span>12:41</span>
+            <span class="mobile-food-icons">▮▮▮  Wi‑Fi  <b>72</b></span>
+          </div>
+          <div class="mobile-food-titlebar">
+            <span class="mobile-food-back">‹</span>
+            <span class="mobile-food-title">美食</span>
+          </div>
+        </div>
+
+        <div class="mobile-food-panel">
+          <label class="mobile-search-box">
+            <span>⌕</span>
+            <input
+              type="search"
+              placeholder="请输入商家或商品名称"
+              oninput="document.getElementById('provinceDishSearch').value = this.value; renderProvinceMenu()"
+            />
+          </label>
+
+          <div id="mobileCategoryRow" class="mobile-category-row" aria-label="美食分类"></div>
+
+          <div class="mobile-filter-row" aria-label="排序筛选">
+            <button type="button">综合排序⌄</button>
+            <button type="button">速度⌄</button>
+            <button type="button">全部筛选⌄</button>
+          </div>
+
+          <div class="mobile-chip-row" aria-label="快捷筛选">
+            <button type="button">⚡ 15分钟</button>
+            <button type="button">堂食店</button>
+            <button type="button">神券商家</button>
+            <button type="button">新客立减</button>
+          </div>
+        </div>
+      </section>
+
       <!-- 首屏：配送与搜索 -->
       <section id="top" class="grid min-h-[calc(100vh-8rem)] items-center gap-10 pb-20 lg:grid-cols-[1.03fr_0.97fr]">
         <div>
@@ -2762,16 +3150,40 @@
 
     function renderProvinceFilters() {
       const container = document.getElementById('provinceTabs');
-      if (!container) return;
-
       const tabs = ['热门', ...provinceCuisineData.map(region => region.province)];
-      container.innerHTML = tabs.map((name) => `
-        <button
-          type="button"
-          onclick="setActiveProvince('${name}')"
-          class="shrink-0 rounded-2xl ${activeProvince === name ? 'bg-amber-50/[0.12] font-black text-amber-50' : 'bg-amber-50/[0.065] font-light text-amber-100'} px-5 py-3 text-sm tracking-wide transition-all duration-300 hover:bg-amber-50/[0.12] active:scale-[0.96]"
-        >${name === '热门' ? '🔥 今晚热门' : name}</button>
-      `).join('');
+      if (container) {
+        container.innerHTML = tabs.map((name) => `
+          <button
+            type="button"
+            onclick="setActiveProvince('${name}')"
+            class="shrink-0 rounded-2xl ${activeProvince === name ? 'bg-amber-50/[0.12] font-black text-amber-50' : 'bg-amber-50/[0.065] font-light text-amber-100'} px-5 py-3 text-sm tracking-wide transition-all duration-300 hover:bg-amber-50/[0.12] active:scale-[0.96]"
+          >${name === '热门' ? '🔥 今晚热门' : name}</button>
+        `).join('');
+      }
+
+      const mobileContainer = document.getElementById('mobileCategoryRow');
+      if (mobileContainer) {
+        const mobileTabs = [
+          { name: '热门', label: '全部', emoji: '🍱' },
+          { name: '北京', label: '饺子馄饨', emoji: '🥟' },
+          { name: '上海', label: '汉堡薯条', emoji: '🍔' },
+          { name: '广东', label: '意面披萨', emoji: '🍕' },
+          { name: '天津', label: '包子粥店', emoji: '🥣' },
+          { name: '四川', label: '快餐便当', emoji: '🍛' },
+          { name: '湖南', label: '小炒热菜', emoji: '🌶️' }
+        ];
+
+        mobileContainer.innerHTML = mobileTabs.map((tab) => `
+          <button
+            type="button"
+            onclick="setActiveProvince('${tab.name}')"
+            class="mobile-category ${activeProvince === tab.name ? 'is-active' : ''}"
+          >
+            <span class="mobile-category-icon">${tab.emoji}</span>
+            <span>${tab.label}</span>
+          </button>
+        `).join('');
+      }
     }
 
     function setActiveProvince(name) {
@@ -2864,7 +3276,32 @@
         else title.textContent = `正在显示：${activeProvince} · 15 道地方菜名`;
       }
 
-      grid.innerHTML = dishes.map((item) => `
+      const isMobile = window.matchMedia('(max-width: 767px)').matches;
+
+      grid.innerHTML = dishes.map((item, index) => isMobile ? `
+        <article data-dish-card data-dish-key="${item.key}" class="mobile-shop-card">
+          <div class="mobile-shop-img">
+            <img data-dish-image loading="lazy" alt="${item.name}" />
+            <div data-dish-fallback class="mobile-shop-fallback">${item.emoji}</div>
+          </div>
+          <div>
+            <h3 class="mobile-shop-title">${item.name}</h3>
+            <p class="mobile-shop-meta">月售${100 + ((index * 137) % 900)}+ · ${item.province}地方风味</p>
+            <p class="mobile-shop-delivery">起送 ¥${Math.max(15, item.price - 8)}　免配送费</p>
+            <p class="mobile-shop-highlight">${(4.7 + ((index % 3) * 0.1)).toFixed(1)}分　最近24小时${22 + ((index * 11) % 78)}人看过</p>
+            <div class="mobile-shop-coupons">
+              <span>神券 满30减20</span>
+              <span>领${(index % 5) + 1}元券</span>
+            </div>
+          </div>
+          <div class="mobile-shop-side">
+            <span>⋮</span>
+            <span class="mobile-shop-badge">没团专送</span>
+            <span class="mobile-shop-time">⚡约${15 + (index % 8)}分钟</span>
+            <button type="button" onclick="addItem('${item.name}', '${item.cuisine}', ${item.price}, '${item.emoji}')" class="mobile-shop-add">+</button>
+          </div>
+        </article>
+      ` : `
         <article data-dish-card data-dish-key="${item.key}" class="glass ambient-dark rounded-[2.2rem] p-4 transition-all duration-300 hover:-translate-y-1 active:scale-[0.98]">
           <div class="dish-photo-shell mb-7">
             <img data-dish-image class="dish-photo-image" loading="lazy" alt="${item.name}" />
