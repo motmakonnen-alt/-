@@ -695,10 +695,177 @@
       }
     }
 
+    /* 没团外卖风格：原创近似外卖 App 视觉，不使用第三方官方标识。 */
+    :root {
+      color-scheme: light;
+      --mt-yellow: #ffd100;
+      --mt-yellow-deep: #f7c600;
+      --mt-ink: #171717;
+      --mt-muted: #6b7280;
+      --mt-line: #ececec;
+      --mt-page: #f6f6f6;
+      --mt-card: #ffffff;
+    }
+
+    body {
+      background:
+        linear-gradient(180deg, #fff6bf 0, #fff8d8 13rem, var(--mt-page) 22rem),
+        var(--mt-page) !important;
+      color: var(--mt-ink) !important;
+      selection-background-color: var(--mt-yellow);
+    }
+
+    .glass,
+    .glass-soft {
+      background: var(--mt-card) !important;
+      border: 1px solid rgba(0, 0, 0, 0.045) !important;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.07) !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    .ambient-pink,
+    .ambient-cyan,
+    .ambient-dark {
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08) !important;
+    }
+
+    .bg-gradient-to-r,
+    .bg-gradient-to-br {
+      background-image: none !important;
+      background-color: var(--mt-yellow) !important;
+      color: var(--mt-ink) !important;
+      box-shadow: none !important;
+    }
+
+    .text-amber-50,
+    .text-orange-50,
+    .text-amber-100,
+    .text-orange-100,
+    .text-amber-200,
+    .text-orange-300,
+    .text-lime-300 {
+      color: var(--mt-ink) !important;
+    }
+
+    .text-amber-200\/70,
+    .text-amber-200\/60,
+    .text-amber-200\/55,
+    .text-amber-200\/50,
+    .text-amber-200\/45,
+    .text-orange-100\/85 {
+      color: var(--mt-muted) !important;
+    }
+
+    .bg-\[\#120B08\]\/45,
+    .bg-\[\#120B08\]\/40,
+    .bg-\[\#120B08\]\/35,
+    .bg-\[\#1C100B\]\/55,
+    .bg-\[\#1C100B\]\/60,
+    .bg-\[\#1C100B\]\/65,
+    .bg-\[\#1C100B\]\/70,
+    .bg-amber-50\/\[0\.05\],
+    .bg-amber-50\/\[0\.06\],
+    .bg-amber-50\/\[0\.065\],
+    .bg-amber-50\/\[0\.075\],
+    .bg-amber-50\/\[0\.08\],
+    .bg-amber-50\/\[0\.085\],
+    .bg-amber-50\/\[0\.09\],
+    .bg-amber-50\/\[0\.12\] {
+      background-color: #f7f7f7 !important;
+    }
+
+    nav {
+      border-radius: 1.25rem !important;
+    }
+
+    nav .size-11,
+    #floatingTray .size-12,
+    #floatingTrayBadge {
+      background: var(--mt-yellow) !important;
+      color: var(--mt-ink) !important;
+    }
+
+    #top h1,
+    #menu h2,
+    #how h2,
+    #recipes h2,
+    #checkoutPage h1,
+    #trackingPage h1,
+    #successPage h1 {
+      color: var(--mt-ink) !important;
+      letter-spacing: -0.04em !important;
+    }
+
+    #provinceDishSearch,
+    #recipeSearch,
+    input {
+      color: var(--mt-ink) !important;
+      background: #f5f5f5 !important;
+    }
+
+    #provinceDishSearch::placeholder,
+    #recipeSearch::placeholder,
+    input::placeholder {
+      color: #9ca3af !important;
+    }
+
+    #provinceTabs button,
+    #recipeCategoryTabs button {
+      border: 1px solid var(--mt-line) !important;
+      background: #fff !important;
+      color: var(--mt-ink) !important;
+    }
+
+    #provinceTabs button.bg-amber-50\/\[0\.12\],
+    #recipeCategoryTabs button.bg-amber-50\/\[0\.12\] {
+      background: var(--mt-yellow) !important;
+      border-color: var(--mt-yellow) !important;
+    }
+
+    [data-dish-card],
+    #recipeGrid > article {
+      background: #fff !important;
+      border: 1px solid rgba(0, 0, 0, 0.05) !important;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06) !important;
+    }
+
+    .dish-photo-shell,
+    #recipeGrid > article > .grid {
+      background: #fff8d8 !important;
+    }
+
+    .dish-photo-badge {
+      background: rgba(255, 255, 255, 0.85);
+      color: var(--mt-muted);
+    }
+
+    #floatingTray {
+      background: #1f2937 !important;
+      color: #fff !important;
+      border-radius: 1.35rem !important;
+      box-shadow: 0 16px 44px rgba(15, 23, 42, 0.2) !important;
+    }
+
+    #floatingTrayTitle,
+    #floatingTrayTotal {
+      color: #fff !important;
+    }
+
+    #floatingTrayMeta {
+      color: rgba(255, 255, 255, 0.68) !important;
+    }
+
+    #toast {
+      background: var(--mt-yellow) !important;
+      color: var(--mt-ink) !important;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18) !important;
+    }
+
   </style>
 </head>
 
-<body class="min-h-screen overflow-x-hidden bg-[#120B08] pb-28 text-amber-50 selection:bg-orange-500 selection:text-amber-50">
+<body class="min-h-screen overflow-x-hidden bg-[#f6f6f6] pb-28 text-[#171717] selection:bg-yellow-300 selection:text-[#171717]">
 
   <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
     <div class="absolute -top-32 right-[-8rem] h-[28rem] w-[28rem] rounded-full bg-orange-500/15 blur-3xl"></div>
